@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playable Integrator - AI Tools</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --bg-card2: #1c2333;
+    --border: #30363d;
+    --text: #e1e4e8;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .container { max-width: 760px; margin: 0 auto; padding: 20px; }
+
+  /* Back link */
+  .back-link {
+    display: inline-block; margin-bottom: 16px; color: var(--accent); font-size: 14px;
+    text-decoration: none; transition: color 0.15s;
+  }
+  .back-link:hover { color: #79c0ff; }
+
+  /* Header */
+  .page-header { margin-bottom: 28px; }
+  .page-header h1 { font-size: 26px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  .page-header .subtitle { color: var(--text-dim); font-size: 14px; }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .badge.local { background: #2d1a1a; color: var(--red); border: 1px solid #5a2020; }
+  .badge.info { background: #1a2332; color: var(--accent); border: 1px solid #1a3a5a; }
+
+  /* Card */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--accent);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h2 .step { color: var(--text-dim); font-size: 13px; font-weight: 400; }
+
+  /* Steps */
+  .steps { list-style: none; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    padding: 10px 0 10px 36px;
+    position: relative;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 10px;
+    width: 24px; height: 24px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+  }
+
+  /* Feature grid */
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .feature-item {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+  }
+  .feature-item .fi-icon { font-size: 18px; margin-bottom: 6px; display: block; }
+  .feature-item .fi-title { font-weight: 600; margin-bottom: 3px; }
+  .feature-item .fi-desc { color: var(--text-dim); font-size: 12px; }
+
+  /* Validation list */
+  .v-list { list-style: none; }
+  .v-list li {
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .v-list li:last-child { border-bottom: none; }
+  .v-ok { color: var(--green); }
+  .v-warn { color: var(--orange); }
+
+  /* Code block */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+
+  /* Download button */
+  .dl-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+  .dl-btn:hover { background: #79c0ff; }
+
+  /* Note */
+  .note {
+    background: #1a1a2e;
+    border: 1px solid #2a2a5a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #b0b0d0;
+    margin-top: 16px;
+  }
+  .note strong { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .feature-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a href="../" class="back-link">← 返回工具站</a>
+
+  <div class="page-header">
+    <h1>🔧 Playable Integrator</h1>
+    <p class="subtitle">小游戏 zip 自动接入 PlayTurbo 平台 SDK</p>
+  </div>
+
+  <div class="badge local">⚠ 此工具需要本地运行，下载后使用（需要 Node.js 环境）</div>
+
+  <div class="card">
+    <h2>📋 功能说明</h2>
+    <p style="font-size:14px; color:var(--text-dim); line-height:1.7;">
+      Playable Integrator 是一个自动化工具，用于将 HTML5 小游戏接入 PlayTurbo 广告平台 SDK。
+      工具使用 AI（GLM-5.2）自动分析游戏代码，注入平台 SDK 钩子，并进行 16 项自动化校验，
+      确保输出的 playable ad 符合平台规范。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>🔄 工作流程</h2>
+    <ul class="steps">
+      <li><strong>上传 zip</strong><br><span style="color:var(--text-dim); font-size:13px">选择打包好的小游戏 zip 文件（需包含 index.html）</span></li>
+      <li><strong>AI 分析注入</strong><br><span style="color:var(--text-dim); font-size:13px">GLM-5.2 分析游戏引擎（Cocos/Unity/Laya等），自动注入 SDK 钩子代码</span></li>
+      <li><strong>确定性后处理</strong><br><span style="color:var(--text-dim); font-size:13px">自动清理 console、重写跳转逻辑、内联资源、替换商店 URL 为 install() 调用</span></li>
+      <li><strong>16 项校验</strong><br><span style="color:var(--text-dim); font-size:13px">自动化校验：MRAID 可用性、CTA 按钮钩子、商店 URL、横竖屏方向等</span></li>
+      <li><strong>下载结果</strong><br><span style="color:var(--text-dim); font-size:13px">校验通过后下载最终 zip，未完全通过则下载当前最优版本并标注需人工复核项</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>✅ 16 项自动化校验</h2>
+    <ul class="v-list">
+      <li><span class="v-ok">✓</span> MRAID 脚本已加载</li>
+      <li><span class="v-ok">✓</span> mraid.open() 可被调用</li>
+      <li><span class="v-ok">✓</span> install() 函数已定义</li>
+      <li><span class="v-ok">✓</span> CTA 按钮已挂钩 install()</li>
+      <li><span class="v-ok">✓</span> 商店 URL 已替换为 install() 调用</li>
+      <li><span class="v-ok">✓</span> 无外部脚本依赖（全内联）</li>
+      <li><span class="v-ok">✓</span> 无 console.log 残留</li>
+      <li><span class="v-ok">✓</span> window.open 已重定向到 install()</li>
+      <li><span class="v-ok">✓</span> 横竖屏方向正确</li>
+      <li><span class="v-ok">✓</span> 无 MTG 残留代码</li>
+      <li><span class="v-ok">✓</span> 游戏启动事件已触发</li>
+      <li><span class="v-ok">✓</span> 方向变化事件已处理</li>
+      <li><span class="v-ok">✓</span> 资源文件可访问</li>
+      <li><span class="v-ok">✓</span> HTML 语法有效</li>
+      <li><span class="v-ok">✓</span> 文件大小符合平台限制</li>
+      <li><span class="v-ok">✓</span> 无硬编码域名跳转</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>⚡ 核心特性</h2>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <span class="fi-icon">🤖</span>
+        <div class="fi-title">AI 驱动</div>
+        <div class="fi-desc">GLM-5.2 自动理解游戏结构，精准注入 SDK 钩子</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🔁</span>
+        <div class="fi-title">自动重试</div>
+        <div class="fi-desc">校验失败时 AI 自动重试修复，最多 3 轮</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">📦</span>
+        <div class="fi-title">多引擎支持</div>
+        <div class="fi-desc">Cocos Creator / Unity WebGL / Laya / 原生 HTML5</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🛡️</span>
+        <div class="fi-title">确定性后处理</div>
+        <div class="fi-desc">AI 注入后，确定性规则清理确保代码质量</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">📊</span>
+        <div class="fi-title">实时日志</div>
+        <div class="fi-desc">SSE 流式推送接入进度，每步透明可见</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🎯</span>
+        <div class="fi-title">PlayTurbo 专属</div>
+        <div class="fi-desc">针对 PlayTurbo 平台规范优化，开箱即用</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💻 本地使用</h2>
+    <p style="font-size:13px; color:var(--text-dim); margin-bottom: 14px;">
+      此工具为 Node.js 服务端应用，需要在本地运行。步骤如下：
+    </p>
+    <div class="code-block">
+# 1. 克隆仓库
+git clone https://github.com/Tothvillar/aitools.git
+cd aitools/playable-integrator
+
+# 2. 安装依赖
+npm install
+
+# 3. 配置 API（ARK / Volcengine GLM-5.2）
+# 编辑 .env 文件，填入 API Token
+# TOKEN=ark-xxxxxxxx
+# BASE_URL=https://ark.cn-beijing.volces.com/api/coding
+# MODEL=glm-5.2
+
+# 4. 启动服务
+npm start
+
+# 5. 浏览器打开
+# http://localhost:3000
+    </div>
+    <div class="note">
+      <strong>注意：</strong>需要有效的 <strong>ARK API Token</strong>（字节跳动火山引擎 GLM-5.2）。
+      如果没有，可以修改代码使用其他兼容 OpenAI API 格式的 LLM 服务。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📁 目录结构</h2>
+    <div class="code-block" style="line-height: 1.9;">
+playable-integrator/
+├── src/
+│   ├── public/
+│   │   └── index.html          # 前端页面
+│   ├── routes/
+│   │   ├── upload.js           # 文件上传接口
+│   │   ├── events.js           # SSE 进度推送
+│   │   └── download.js         # 结果下载接口
+│   ├── agent/
+│   │   └── agent.js            # AI Agent 核心逻辑
+│   └── validator/
+│       └── validate.js         # 16 项校验逻辑
+├── .env                        # API 配置（需自行创建）
+├── package.json
+└── README.md
+    </div>
+  </div>
+
+  <div style="margin-top: 24px; text-align: center;">
+    <a href="https://github.com/Tothvillar/aitools" class="dl-btn" target="_blank">
+      ⬇ 从 GitHub 下载完整项目
+    </a>
+  </div>
+
+  <div style="text-align:center; padding:40px 0 20px; color:var(--text-dim); font-size:13px;">
+    Powered by <span style="color:var(--accent)">GLM-5.2</span>
+  </div>
+
+</div>
+</body>
+</html>

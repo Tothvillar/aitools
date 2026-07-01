@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTG to Unity Ads Converter</title>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f1117; color: #e1e4e8; min-height: 100vh; padding: 20px;
+}
+.container { max-width: 680px; margin: 0 auto; }
+.back-link {
+  display: inline-block; margin-bottom: 16px; color: #58a6ff; font-size: 14px;
+  text-decoration: none; transition: color 0.15s;
+}
+.back-link:hover { color: #79c0ff; }
+h1 { font-size: 22px; margin-bottom: 4px; color: #58a6ff; }
+.subtitle { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
+.card {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 16px; margin-bottom: 16px;
+}
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #c9d1d9; }
+input[type="text"] {
+  width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+  color: #e1e4e8; padding: 8px 12px; font-size: 13px; margin-bottom: 8px;
+}
+input[type="text"]:focus { outline: none; border-color: #58a6ff; }
+label { font-size: 12px; color: #8b949e; display: block; margin-bottom: 4px; }
+.drop-zone {
+  border: 2px dashed #30363d; border-radius: 8px; padding: 32px;
+  text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: #58a6ff; background: #1a2233;
+}
+.drop-zone-text { color: #8b949e; font-size: 14px; }
+.drop-zone-text .filename { color: #58a6ff; font-weight: 600; }
+.btn {
+  background: #238636; color: #fff; border: none; border-radius: 6px;
+  padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.btn:hover { background: #2ea043; }
+.btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+.btn-secondary {
+  background: #21262d; color: #c9d1d9; border: 1px solid #30363d;
+}
+.btn-secondary:hover { background: #30363d; }
+.btn-row { display: flex; gap: 8px; margin-top: 8px; }
+.progress-bar {
+  width: 100%; height: 6px; background: #21262d; border-radius: 3px;
+  overflow: hidden; margin-top: 12px; display: none;
+}
+.progress-bar.active { display: block; }
+.progress-fill {
+  height: 100%; background: #58a6ff; width: 0%; transition: width 0.3s;
+}
+.log {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+  padding: 12px; font-family: "Consolas", "Monaco", monospace; font-size: 12px;
+  color: #8b949e; max-height: 300px; overflow-y: auto; white-space: pre-wrap;
+  word-break: break-all;
+}
+.log .pass { color: #3fb950; }
+.log .warn { color: #d29922; }
+.log .error { color: #f85149; }
+.log .info { color: #58a6ff; }
+.result-area { margin-top: 16px; display: none; }
+.result-area.active { display: block; }
+.result-summary {
+  font-size: 14px; padding: 12px; border-radius: 6px; margin-bottom: 12px;
+}
+.result-summary.success { background: #1a2332; color: #3fb950; border: 1px solid #238636; }
+.result-summary.fail { background: #2d1517; color: #f85149; border: 1px solid #da3633; }
+.download-btn {
+  display: inline-block; background: #238636; color: #fff; text-decoration: none;
+  padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;
+  transition: background 0.15s;
+}
+.download-btn:hover { background: #2ea043; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="../" class="back-link">← 返回工具站</a>
+  <h1>MTG to Unity Ads Converter</h1>
+  <p class="subtitle">Upload MTG playable zip, get Unity Ads compatible HTML</p>
+
+  <!-- Drop zone -->
+  <div class="card">
+    <div class="card-title">1. Select MTG ZIP File</div>
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-text" id="dropText">
+        Drop .zip here or click to browse
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".zip" style="display:none">
+  </div>
+
+  <!-- Store URLs -->
+  <div class="card">
+    <div class="card-title">2. Store URLs</div>
+    <label>Android URL</label>
+    <input type="text" id="androidUrl" value="https://play.google.com/store/apps/details?id=com.fruit.match.gp">
+    <label>iOS URL</label>
+    <input type="text" id="iosUrl" value="https://apps.apple.com/app/idYOUR_IOS_APP_ID">
+  </div>
+
+  <!-- Convert button -->
+  <div class="btn-row">
+    <button class="btn" id="convertBtn" disabled>Convert</button>
+    <button class="btn btn-secondary" id="clearBtn">Clear</button>
+  </div>
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-area" id="resultArea">
+    <div class="result-summary" id="resultSummary"></div>
+    <a class="download-btn" id="downloadBtn" href="#">Download HTML</a>
+  </div>
+
+  <!-- Log -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Log</div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// Unity MRAID replacement code
+// ============================================================
+const UNITY_MRAID_CODE = `(function () {
+  var storeUrl = '__ANDROID_URL__';
+  var androidUrl = '__ANDROID_URL__';
+  var iosUrl = '__IOS_URL__';
+  var gameStarted = false;
+
+  if (typeof mraid === 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() { startGame(); });
+    if (document.readyState === 'interactive' || document.readyState === 'complete') { startGame(); }
+  } else {
+    if (mraid.getState() === 'loading') { mraid.addEventListener('ready', onSdkReady); }
+    else { onSdkReady(); }
+  }
+
+  function onSdkReady() {
+    mraid.addEventListener('viewableChange', viewableChangeHandler);
+    if (mraid.isViewable()) { startGame(); }
+  }
+
+  function viewableChangeHandler(viewable) { if (viewable) { startGame(); } }
+
+  function startGame() {
+    if (gameStarted) return;
+    gameStarted = true;
+    window.isGameStarted = true;
+    if (window.MW_gameStartCheck) window.MW_gameStartCheck();
+    document.dispatchEvent(new Event('PLAYABLE:gameStart'));
+  }
+
+  window.install = function() {
+    var userAgent = navigator.userAgent || navigator.vendor;
+    var url = storeUrl;
+    if (/android/i.test(userAgent) && androidUrl) { url = androidUrl; }
+    else if (/iphone|ipad|ipod/i.test(userAgent) && iosUrl) { url = iosUrl; }
+    if (typeof mraid !== 'undefined' && mraid.open) { mraid.open(url); }
+    else { window.open(url, '_blank'); }
+  };
+
+  window.openAppStore = window.install;
+
+  function getNodePath(node) {
+    var parts = [];
+    while (node) { parts.push(node.name || ""); node = node.parent; }
+    return parts.reverse().join("/");
+  }
+
+  function getNodeLabelText(node) {
+    if (!window.cc || !window.cc.Label || !node) return "";
+    var texts = [], queue = [node];
+    while (queue.length) {
+      var current = queue.shift();
+      if (!current) continue;
+      var label = current.getComponent && current.getComponent(window.cc.Label);
+      if (label && typeof label.string === "string" && label.string) { texts.push(label.string); }
+      var children = current.children || [];
+      for (var i = 0; i < children.length; i++) queue.push(children[i]);
+    }
+    return texts.join(" ");
+  }
+
+  function getButtonRect(button) {
+    var node = (button && (button.target || button.node)) || null;
+    if (!node || !window.cc || !window.cc.UITransform) return null;
+    var ui = node.getComponent && node.getComponent(window.cc.UITransform);
+    if (!ui || !ui.getBoundingBoxToWorld) return null;
+    try { return ui.getBoundingBoxToWorld(); } catch (err) { return null; }
+  }
+
+  function isLikelyCtaButton(button) {
+    var node = (button && (button.target || button.node)) || null;
+    if (!node) return false;
+    var descriptor = (getNodePath(node) + " " + getNodeLabelText(node)).toLowerCase();
+    if (/(play|download|install|cta|store|shop|start)/.test(descriptor)) return true;
+    var rect = getButtonRect(button);
+    var w = window.innerWidth || document.documentElement.clientWidth || 0;
+    var h = window.innerHeight || document.documentElement.clientHeight || 0;
+    if (!rect || !w || !h) return false;
+    var cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2;
+    var nw = rect.width / w, nh = rect.height / h;
+    return nw > 0.18 && nh > 0.04 && ((cx / w > 0.7 && cy / h > 0.72) || (cy / h > 0.62 && nw > 0.28));
+  }
+
+  function hookCocosButtonBridge() {
+    if (!window.cc || !window.cc.Button) return;
+    var proto = window.cc.Button.prototype;
+    if (!proto || proto.__unityCtaHooked || typeof proto._onTouchEnded !== 'function') return;
+    var originalTouchEnded = proto._onTouchEnded;
+    proto._onTouchEnded = function () {
+      var result = originalTouchEnded.apply(this, arguments);
+      var shouldInstall = false;
+      try { shouldInstall = !!(this && this._pressed && isLikelyCtaButton(this)); } catch (err) {}
+      if (shouldInstall) { window.install(); }
+      return result;
+    };
+    proto.__unityCtaHooked = true;
+  }
+
+  function hookSdkBridges() {
+    if (window.FbPlayableAd && typeof window.FbPlayableAd.onCTAClick === 'function' && !window.__unityWrappedFbCta) {
+      var origFb = window.FbPlayableAd.onCTAClick;
+      window.FbPlayableAd.onCTAClick = function() { window.install(); return origFb.apply(this, arguments); };
+      window.__unityWrappedFbCta = true;
+    }
+    if (window.ExitApi && typeof window.ExitApi.exit === 'function' && !window.__unityWrappedExit) {
+      window.ExitApi.exit = function() { window.install(); }; window.__unityWrappedExit = true;
+    }
+    if (window.BGY_MRAID && typeof window.BGY_MRAID.open === 'function' && !window.__unityWrappedBgyOpen) {
+      window.BGY_MRAID.open = function() { window.install(); }; window.__unityWrappedBgyOpen = true;
+    }
+    if (typeof window.open === 'function' && !window.__unityWrappedWindowOpen) {
+      window.open = function() { window.install(); }; window.__unityWrappedWindowOpen = true;
+    }
+  }
+
+  var hookTimer = setInterval(function () {
+    if (window.cc && window.cc.Button) { clearInterval(hookTimer); hookCocosButtonBridge(); hookSdkBridges(); }
+  }, 100);
+  setTimeout(function() { clearInterval(hookTimer); }, 10000);
+
+  if (typeof mraid !== 'undefined' && mraid.open && !mraid.__unityHooked) {
+    mraid.open = function(url) { window.install(); };
+    mraid.__unityHooked = true;
+  }
+})();`;
+
+const HEAD_INJECTION = `<script>
+(function() {
+    var s = document.createElement('script');
+    s.src = 'mraid.js';
+    s.async = false;
+    document.head.appendChild(s);
+})();
+(function() {
+    function handleOrientationChange() {
+        if (window.cc && window.cc.view && window.cc.view.resizeWithBrowserSize) { window.cc.view.resizeWithBrowserSize(true); }
+        if (window.cc && window.cc.view && window.cc.view.setCanvasSize) {
+            var w = window.innerWidth || document.documentElement.clientWidth;
+            var h = window.innerHeight || document.documentElement.clientHeight;
+            window.cc.view.setCanvasSize(w, h);
+        }
+        window.dispatchEvent(new Event('orientationchange'));
+        window.dispatchEvent(new Event('resize'));
+    }
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+})();
+<\/script>
+</head>`;
+
+// ============================================================
+// Conversion logic
+// ============================================================
+
+function findMtgBridge(content) {
+  const patterns = [
+    /\(function\s*\(\s*\)\s*\{\s*var\s+readySent\s*=\s*false;\s*var\s+startSent\s*=\s*false;[\s\S]*?window\.gameClose\s*=\s*window\.gameClose\s*\|\|\s*function\s*\(\s*\)\s*\{\s*\};[\s\S]*?\}\)\s*\(\s*\)\s*;/,
+    /\(function\s*\(\s*\)\s*\{\s*var\s+readySent\s*=\s*false;[\s\S]*?\}\)\s*\(\s*\)\s*;/,
+    /\(function\s*\(\)\s*\{[\s\S]*?readySent[\s\S]*?gameClose[\s\S]*?\}\)\(\);/,
+  ];
+  for (let i = 0; i < patterns.length; i++) {
+    const m = content.match(patterns[i]);
+    if (m) return { match: m, index: m.index, patternIdx: i };
+  }
+  return null;
+}
+
+function convertHtml(content, androidUrl, iosUrl, log) {
+  const originalSize = new Blob([content]).size;
+  const changes = [];
+
+  // 1. Replace MTG bridge
+  let mraidCode = UNITY_MRAID_CODE.replaceAll('__ANDROID_URL__', androidUrl).replaceAll('__IOS_URL__', iosUrl);
+  const bridge = findMtgBridge(content);
+  if (bridge) {
+    const oldBlock = bridge.match[0];
+    content = content.slice(0, bridge.index) + mraidCode + content.slice(bridge.index + oldBlock.length);
+    changes.push(`MTG bridge -> Unity MRAID (${oldBlock.length} -> ${mraidCode.length} chars)`);
+  } else {
+    log('WARN: No MTG bridge found, appending MRAID code');
+    content = content.replace('</body>', mraidCode + '\n</body>');
+    changes.push('MRAID code injected before </body> (fallback)');
+  }
+
+  // 2. Remove external MTG scripts
+  const extScripts = [
+    /<script[^>]*src=["'][^"']*mtg-offline-package\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*package-loading\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*mw_config\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*web-audio-check\.js["'][^>]*>\s*<\/script>/gi,
+  ];
+  let extRemoved = 0;
+  for (const p of extScripts) {
+    const m = content.match(p);
+    if (m) { extRemoved += m.length; content = content.replace(p, ''); }
+  }
+  if (extRemoved) changes.push(`Removed ${extRemoved} external MTG script tag(s)`);
+
+  // 3. Replace MTG global vars
+  content = content.replace('window.__mtgSdkGameReady||window.gameReady', 'undefined');
+  content = content.replace('window.__mtgSdkInstall||window.install', 'window.install');
+
+  // 4. Update store URLs
+  content = content.replace(/pb_google_url:"([^"]*)"/g, `pb_google_url:"${androidUrl}"`);
+  content = content.replace(/pb_ios_url:"([^"]*)"/g, `pb_ios_url:"${iosUrl}"`);
+  const androidPkg = androidUrl.includes('id=') ? androidUrl.split('id=')[1] : androidUrl;
+  const iosId = iosUrl.includes('/id') ? iosUrl.split('/id')[1] : iosUrl;
+  content = content.replaceAll('YOUR_ANDROID_PACKAGE', androidPkg);
+  content = content.replaceAll('YOUR_IOS_APP_ID', iosId);
+
+  // 5. Inject mraid.js + orientation
+  if (!content.includes('mraid.js')) {
+    if (content.includes('</head>')) {
+      content = content.replace('</head>', HEAD_INJECTION);
+      changes.push('Injected mraid.js + orientation handlers');
+    } else {
+      content = HEAD_INJECTION.replace('</head>', '') + content;
+      changes.push('Injected mraid.js + orientation handlers (no </head>)');
+    }
+  }
+
+  // 6. Verify
+  const mtgRemnants = (content.match(/mtg-offline-package|__mtgSdk/g) || []).length;
+  const extRefs = (content.match(/src=['"]\.\//g) || []).length;
+  const hasOrientation = content.includes('orientationchange');
+  const hasMraid = content.includes('mraid.js');
+  const newSize = new Blob([content]).size;
+  const success = mtgRemnants === 0 && extRefs === 0 && hasMraid && hasOrientation;
+
+  return {
+    content,
+    originalSizeMB: (originalSize / 1048576).toFixed(2),
+    newSizeMB: (newSize / 1048576).toFixed(2),
+    changes,
+    mtgRemnants, extRefs, hasMraid, hasOrientation, success
+  };
+}
+
+// ============================================================
+// UI logic
+// ============================================================
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const dropText = document.getElementById('dropText');
+const convertBtn = document.getElementById('convertBtn');
+const clearBtn = document.getElementById('clearBtn');
+const logEl = document.getElementById('log');
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const resultArea = document.getElementById('resultArea');
+const resultSummary = document.getElementById('resultSummary');
+const downloadBtn = document.getElementById('downloadBtn');
+
+let selectedFile = null;
+let convertedBlobUrl = null;
+let convertedFilename = null;
+
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(2) + ' MB';
+}
+
+// Drop zone
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.name.toLowerCase().endsWith('.zip')) {
+    log('ERROR: Please select a .zip file', 'error');
+    return;
+  }
+  selectedFile = file;
+  dropText.innerHTML = `Selected: <span class="filename">${file.name}</span> (${formatBytes(file.size)})`;
+  convertBtn.disabled = false;
+  resultArea.classList.remove('active');
+  log(`Loaded: ${file.name} (${formatBytes(file.size)})`, 'info');
+}
+
+// Convert
+convertBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  convertBtn.disabled = true;
+  progressBar.classList.add('active');
+  progressFill.style.width = '10%';
+  resultArea.classList.remove('active');
+  logEl.innerHTML = '';
+
+  const androidUrl = document.getElementById('androidUrl').value.trim();
+  const iosUrl = document.getElementById('iosUrl').value.trim();
+
+  if (!androidUrl) { log('ERROR: Android URL is required', 'error'); convertBtn.disabled = false; progressBar.classList.remove('active'); return; }
+
+  log('=' .repeat(60));
+  log(`Converting: ${selectedFile.name}`, 'info');
+  log(`Android: ${androidUrl}`);
+  log(`iOS: ${iosUrl}`);
+  log('=' .repeat(60));
+
+  try {
+    progressFill.style.width = '30%';
+    log('Reading zip...');
+    const zip = await JSZip.loadAsync(selectedFile);
+
+    // Find HTML file
+    let htmlEntry = null;
+    for (const name in zip.files) {
+      if (name.endsWith('.html') || name.endsWith('.htm')) {
+        htmlEntry = zip.files[name];
+        break;
+      }
+    }
+
+    if (!htmlEntry) {
+      log('ERROR: No HTML file found in zip', 'error');
+      convertBtn.disabled = false;
+      progressBar.classList.remove('active');
+      return;
+    }
+
+    progressFill.style.width = '50%';
+    const htmlName = htmlEntry.name.split('/').pop();
+    log(`Found HTML: ${htmlName}`);
+
+    const htmlContent = await htmlEntry.async('string');
+    progressFill.style.width = '70%';
+
+    log('Converting...');
+    const result = convertHtml(htmlContent, androidUrl, iosUrl, msg => log(msg, 'warn'));
+
+    progressFill.style.width = '90%';
+
+    const status = result.success ? 'PASS' : 'WARN';
+    log(`${status} | ${result.originalSizeMB}MB -> ${result.newSizeMB}MB | MTG:${result.mtgRemnants} mraid:${result.hasMraid ? 'Y' : 'N'} orient:${result.hasOrientation ? 'Y' : 'N'}`, result.success ? 'pass' : 'warn');
+    for (const c of result.changes) log(`  -> ${c}`);
+
+    // Output filename
+    let outName = htmlName.replace(/_MTG/i, '_Unity').replace(/_mtg/i, '_Unity');
+    if (!outName.includes('_Unity')) {
+      const dot = outName.lastIndexOf('.');
+      outName = outName.slice(0, dot) + '_Unity' + outName.slice(dot);
+    }
+
+    // Create download
+    if (convertedBlobUrl) URL.revokeObjectURL(convertedBlobUrl);
+    const blob = new Blob([result.content], { type: 'text/html' });
+    convertedBlobUrl = URL.createObjectURL(blob);
+    convertedFilename = outName;
+
+    downloadBtn.href = convertedBlobUrl;
+    downloadBtn.download = outName;
+
+    progressFill.style.width = '100%';
+
+    // Show result
+    resultArea.classList.add('active');
+    if (result.success) {
+      resultSummary.className = 'result-summary success';
+      resultSummary.textContent = `Conversion successful! ${result.originalSizeMB}MB -> ${result.newSizeMB}MB`;
+    } else {
+      resultSummary.className = 'result-summary fail';
+      resultSummary.textContent = `Conversion completed with warnings. Check log for details.`;
+    }
+
+    log(`\nDone! Output: ${outName} (${result.newSizeMB} MB)`, 'pass');
+    log(`Click "Download HTML" to save.`, 'info');
+
+  } catch (err) {
+    log(`FATAL ERROR: ${err.message}`, 'error');
+    console.error(err);
+  } finally {
+    convertBtn.disabled = false;
+    setTimeout(() => progressBar.classList.remove('active'), 1000);
+  }
+});
+
+// Clear
+clearBtn.addEventListener('click', () => {
+  selectedFile = null;
+  convertBtn.disabled = true;
+  fileInput.value = '';
+  dropText.textContent = 'Drop .zip here or click to browse';
+  logEl.innerHTML = '';
+  resultArea.classList.remove('active');
+  if (convertedBlobUrl) { URL.revokeObjectURL(convertedBlobUrl); convertedBlobUrl = null; }
+});
+</script>
+</body>
+</html>
