@@ -1,312 +1,993 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Playable Integrator - AI Tools</title>
-<style>
-  :root {
-    --bg: #0d1117;
-    --bg-card: #161b22;
-    --bg-card2: #1c2333;
-    --border: #30363d;
-    --text: #e1e4e8;
-    --text-dim: #8b949e;
-    --accent: #58a6ff;
-    --green: #3fb950;
-    --orange: #d29922;
-    --red: #f85149;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
-  }
-  a { color: inherit; text-decoration: none; }
-
-  .container { max-width: 760px; margin: 0 auto; padding: 20px; }
-
-  /* Back link */
-  .back-link {
-    display: inline-block; margin-bottom: 16px; color: var(--accent); font-size: 14px;
-    text-decoration: none; transition: color 0.15s;
-  }
-  .back-link:hover { color: #79c0ff; }
-
-  /* Header */
-  .page-header { margin-bottom: 28px; }
-  .page-header h1 { font-size: 26px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
-  .page-header .subtitle { color: var(--text-dim); font-size: 14px; }
-
-  /* Badge */
-  .badge {
-    display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
-    margin-bottom: 20px;
-  }
-  .badge.local { background: #2d1a1a; color: var(--red); border: 1px solid #5a2020; }
-  .badge.info { background: #1a2332; color: var(--accent); border: 1px solid #1a3a5a; }
-
-  /* Card */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .card h2 {
-    font-size: 15px; font-weight: 600; margin-bottom: 14px; color: var(--accent);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .card h2 .step { color: var(--text-dim); font-size: 13px; font-weight: 400; }
-
-  /* Steps */
-  .steps { list-style: none; counter-reset: step; }
-  .steps li {
-    counter-increment: step;
-    padding: 10px 0 10px 36px;
-    position: relative;
-    font-size: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .steps li:last-child { border-bottom: none; }
-  .steps li::before {
-    content: counter(step);
-    position: absolute; left: 0; top: 10px;
-    width: 24px; height: 24px;
-    background: var(--bg-card2);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    font-size: 12px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--accent);
-  }
-
-  /* Feature grid */
-  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .feature-item {
-    background: var(--bg-card2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 13px;
-  }
-  .feature-item .fi-icon { font-size: 18px; margin-bottom: 6px; display: block; }
-  .feature-item .fi-title { font-weight: 600; margin-bottom: 3px; }
-  .feature-item .fi-desc { color: var(--text-dim); font-size: 12px; }
-
-  /* Validation list */
-  .v-list { list-style: none; }
-  .v-list li {
-    padding: 6px 0;
-    font-size: 13px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .v-list li:last-child { border-bottom: none; }
-  .v-ok { color: var(--green); }
-  .v-warn { color: var(--orange); }
-
-  /* Code block */
-  .code-block {
-    background: #0d1117;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px;
-    font-family: "Consolas", "Monaco", monospace;
-    font-size: 12.5px;
-    color: var(--text-dim);
-    overflow-x: auto;
-    line-height: 1.7;
-  }
-
-  /* Download button */
-  .dl-btn {
-    display: inline-block;
-    padding: 10px 24px;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: background 0.15s;
-    border: none;
-    cursor: pointer;
-  }
-  .dl-btn:hover { background: #79c0ff; }
-
-  /* Note */
-  .note {
-    background: #1a1a2e;
-    border: 1px solid #2a2a5a;
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: #b0b0d0;
-    margin-top: 16px;
-  }
-  .note strong { color: var(--accent); }
-
-  @media (max-width: 600px) {
-    .feature-grid { grid-template-columns: 1fr; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playable Integrator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #0f1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        a { color: #58a6ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #30363d;
+        }
+        .back-link { font-size: 14px; margin-bottom: 15px; display: inline-block; }
+        h1 { font-size: 32px; margin-bottom: 10px; color: #f0f6fc; }
+        .subtitle { color: #8b949e; font-size: 16px; line-height: 1.6; }
+        
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 18px; margin-bottom: 15px; color: #f0f6fc; display: flex; align-items: center; gap: 10px; }
+        .card-title .step { background: #30363d; padding: 2px 10px; border-radius: 4px; font-size: 14px; }
+        
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; color: #8b949e; }
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+        .form-group input:focus { outline: none; border-color: #58a6ff; }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #238636;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #2ea043; }
+        .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+        .btn-secondary { background: #21262d; }
+        .btn-secondary:hover { background: #30363d; }
+        .btn-primary { background: #1f6feb; }
+        .btn-primary:hover { background: #388bfd; }
+        
+        .upload-zone {
+            border: 2px dashed #30363d;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #58a6ff; background: rgba(88, 166, 255, 0.1); }
+        .upload-zone input { display: none; }
+        .upload-zone .icon { font-size: 48px; margin-bottom: 15px; }
+        .upload-zone .text { color: #8b949e; }
+        
+        .progress-bar {
+            height: 8px;
+            background: #21262d;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #238636, #2ea043);
+            transition: width 0.3s;
+        }
+        .progress-text { font-size: 14px; color: #8b949e; margin-bottom: 10px; }
+        
+        .log-area {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .log-entry { margin-bottom: 5px; }
+        .log-time { color: #484f58; }
+        .log-info { color: #8b949e; }
+        .log-blue { color: #58a6ff; }
+        .log-green { color: #3fb950; }
+        .log-red { color: #f85149; }
+        .log-orange { color: #d29922; }
+        .log-purple { color: #a371f7; }
+        
+        .validation-results { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .pill-ok { background: rgba(63, 185, 80, 0.2); color: #3fb950; }
+        .pill-bad { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+        .pill-warn { background: rgba(210, 153, 34, 0.2); color: #d29922; }
+        
+        .result-box { padding: 20px; border-radius: 8px; margin-top: 15px; }
+        .result-success { background: rgba(63, 185, 80, 0.1); border: 1px solid #238636; }
+        .result-fail { background: rgba(248, 81, 73, 0.1); border: 1px solid #da3633; }
+        
+        .hidden { display: none; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+    </style>
 </head>
 <body>
-<div class="container">
-
-  <a href="../" class="back-link">← 返回工具站</a>
-
-  <div class="page-header">
-    <h1>🔧 Playable Integrator</h1>
-    <p class="subtitle">小游戏 zip 自动接入 PlayTurbo 平台 SDK</p>
-  </div>
-
-  <div class="badge local">⚠ 此工具需要本地运行，下载后使用（需要 Node.js 环境）</div>
-
-  <div class="card">
-    <h2>📋 功能说明</h2>
-    <p style="font-size:14px; color:var(--text-dim); line-height:1.7;">
-      Playable Integrator 是一个自动化工具，用于将 HTML5 小游戏接入 PlayTurbo 广告平台 SDK。
-      工具使用 AI（GLM-5.2）自动分析游戏代码，注入平台 SDK 钩子，并进行 16 项自动化校验，
-      确保输出的 playable ad 符合平台规范。
-    </p>
-  </div>
-
-  <div class="card">
-    <h2>🔄 工作流程</h2>
-    <ul class="steps">
-      <li><strong>上传 zip</strong><br><span style="color:var(--text-dim); font-size:13px">选择打包好的小游戏 zip 文件（需包含 index.html）</span></li>
-      <li><strong>AI 分析注入</strong><br><span style="color:var(--text-dim); font-size:13px">GLM-5.2 分析游戏引擎（Cocos/Unity/Laya等），自动注入 SDK 钩子代码</span></li>
-      <li><strong>确定性后处理</strong><br><span style="color:var(--text-dim); font-size:13px">自动清理 console、重写跳转逻辑、内联资源、替换商店 URL 为 install() 调用</span></li>
-      <li><strong>16 项校验</strong><br><span style="color:var(--text-dim); font-size:13px">自动化校验：MRAID 可用性、CTA 按钮钩子、商店 URL、横竖屏方向等</span></li>
-      <li><strong>下载结果</strong><br><span style="color:var(--text-dim); font-size:13px">校验通过后下载最终 zip，未完全通过则下载当前最优版本并标注需人工复核项</span></li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>✅ 16 项自动化校验</h2>
-    <ul class="v-list">
-      <li><span class="v-ok">✓</span> MRAID 脚本已加载</li>
-      <li><span class="v-ok">✓</span> mraid.open() 可被调用</li>
-      <li><span class="v-ok">✓</span> install() 函数已定义</li>
-      <li><span class="v-ok">✓</span> CTA 按钮已挂钩 install()</li>
-      <li><span class="v-ok">✓</span> 商店 URL 已替换为 install() 调用</li>
-      <li><span class="v-ok">✓</span> 无外部脚本依赖（全内联）</li>
-      <li><span class="v-ok">✓</span> 无 console.log 残留</li>
-      <li><span class="v-ok">✓</span> window.open 已重定向到 install()</li>
-      <li><span class="v-ok">✓</span> 横竖屏方向正确</li>
-      <li><span class="v-ok">✓</span> 无 MTG 残留代码</li>
-      <li><span class="v-ok">✓</span> 游戏启动事件已触发</li>
-      <li><span class="v-ok">✓</span> 方向变化事件已处理</li>
-      <li><span class="v-ok">✓</span> 资源文件可访问</li>
-      <li><span class="v-ok">✓</span> HTML 语法有效</li>
-      <li><span class="v-ok">✓</span> 文件大小符合平台限制</li>
-      <li><span class="v-ok">✓</span> 无硬编码域名跳转</li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>⚡ 核心特性</h2>
-    <div class="feature-grid">
-      <div class="feature-item">
-        <span class="fi-icon">🤖</span>
-        <div class="fi-title">AI 驱动</div>
-        <div class="fi-desc">GLM-5.2 自动理解游戏结构，精准注入 SDK 钩子</div>
-      </div>
-      <div class="feature-item">
-        <span class="fi-icon">🔁</span>
-        <div class="fi-title">自动重试</div>
-        <div class="fi-desc">校验失败时 AI 自动重试修复，最多 3 轮</div>
-      </div>
-      <div class="feature-item">
-        <span class="fi-icon">📦</span>
-        <div class="fi-title">多引擎支持</div>
-        <div class="fi-desc">Cocos Creator / Unity WebGL / Laya / 原生 HTML5</div>
-      </div>
-      <div class="feature-item">
-        <span class="fi-icon">🛡️</span>
-        <div class="fi-title">确定性后处理</div>
-        <div class="fi-desc">AI 注入后，确定性规则清理确保代码质量</div>
-      </div>
-      <div class="feature-item">
-        <span class="fi-icon">📊</span>
-        <div class="fi-title">实时日志</div>
-        <div class="fi-desc">SSE 流式推送接入进度，每步透明可见</div>
-      </div>
-      <div class="feature-item">
-        <span class="fi-icon">🎯</span>
-        <div class="fi-title">PlayTurbo 专属</div>
-        <div class="fi-desc">针对 PlayTurbo 平台规范优化，开箱即用</div>
-      </div>
+    <div class="container">
+        <div class="header">
+            <a href="../index.html" class="back-link">← 返回工具站</a>
+            <h1>Playable Integrator</h1>
+            <p class="subtitle">上传小游戏 zip → AI 注入 SDK 钩子 → 确定性后处理 → 16项校验 → 下载结果 zip</p>
+        </div>
+        
+        <!-- API Configuration -->
+        <div class="card">
+            <h2 class="card-title"><span class="step">①</span> API 配置</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Token</label>
+                    <input type="password" id="apiToken" placeholder="输入 Ark API Token">
+                </div>
+                <div class="form-group">
+                    <label>Base URL</label>
+                    <input type="text" id="apiBaseUrl" placeholder="https://ark.cn-beijing.volces.com/api/v3">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="apiModel" placeholder="ep-xxxxx">
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="saveApiConfig()">保存配置</button>
+            <span id="configStatus" style="margin-left: 10px; color: #3fb950;"></span>
+        </div>
+        
+        <!-- Upload Zone -->
+        <div class="card">
+            <h2 class="card-title"><span class="step">②</span> 上传 ZIP</h2>
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" accept=".zip">
+                <div class="icon">📦</div>
+                <div class="text">拖拽 ZIP 文件到此处，或点击选择文件</div>
+            </div>
+        </div>
+        
+        <!-- Progress & Logs -->
+        <div class="card hidden" id="processCard">
+            <h2 class="card-title"><span class="step">③</span> 处理进度</h2>
+            <div class="progress-text" id="progressText">准备中...</div>
+            <div class="progress-bar"><div class="fill" id="progressFill" style="width: 0%"></div></div>
+            <div class="log-area" id="logArea"></div>
+        </div>
+        
+        <!-- Results -->
+        <div class="card hidden" id="resultCard">
+            <h2 class="card-title"><span class="step">④</span> 校验结果</h2>
+            <div class="validation-results" id="validationResults"></div>
+            <div id="resultBox"></div>
+        </div>
     </div>
-  </div>
+    
+    <script>
+        // ==================== Global State ====================
+        let apiConfig = { token: '', baseUrl: '', model: '' };
+        let virtualFS = new Map();
+        let entryHtml = '';
+        let engineType = 'unknown';
+        let workDir = '';
+        let zipName = '';
+        
+        // ==================== Initialization ====================
+        function init() {
+            loadApiConfig();
+            setupUploadZone();
+        }
+        
+        function loadApiConfig() {
+            const saved = localStorage.getItem('playableIntegrator_apiConfig');
+            if (saved) {
+                apiConfig = JSON.parse(saved);
+                document.getElementById('apiToken').value = apiConfig.token || '';
+                document.getElementById('apiBaseUrl').value = apiConfig.baseUrl || '';
+                document.getElementById('apiModel').value = apiConfig.model || '';
+            }
+        }
+        
+        function saveApiConfig() {
+            apiConfig = {
+                token: document.getElementById('apiToken').value.trim(),
+                baseUrl: document.getElementById('apiBaseUrl').value.trim() || 'https://ark.cn-beijing.volces.com/api/v3',
+                model: document.getElementById('apiModel').value.trim()
+            };
+            localStorage.setItem('playableIntegrator_apiConfig', JSON.stringify(apiConfig));
+            document.getElementById('configStatus').textContent = '✓ 已保存';
+            setTimeout(() => document.getElementById('configStatus').textContent = '', 2000);
+        }
+        
+        function setupUploadZone() {
+            const zone = document.getElementById('uploadZone');
+            const input = document.getElementById('fileInput');
+            
+            zone.addEventListener('click', () => input.click());
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+            });
+            input.addEventListener('change', e => {
+                if (e.target.files.length > 0) handleFile(e.target.files[0]);
+            });
+        }
+        
+        // ==================== Logging ====================
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${escapeHtml(message)}</span>`;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function setProgress(percent, text) {
+            document.getElementById('progressFill').style.width = `${percent}%`;
+            document.getElementById('progressText').textContent = text;
+        }
+        
+        // ==================== File Handling ====================
+        async function handleFile(file) {
+            if (!file.name.endsWith('.zip')) {
+                alert('请上传 ZIP 文件');
+                return;
+            }
+            
+            if (!apiConfig.token || !apiConfig.model) {
+                alert('请先配置 API');
+                return;
+            }
+            
+            // Show process card
+            document.getElementById('processCard').classList.remove('hidden');
+            document.getElementById('resultCard').classList.add('hidden');
+            document.getElementById('logArea').innerHTML = '';
+            
+            zipName = file.name.replace('.zip', '');
+            log(`开始处理: ${file.name}`, 'blue');
+            
+            try {
+                // Extract ZIP
+                setProgress(5, '解压 ZIP...');
+                await extractZip(file);
+                log(`解压完成，共 ${virtualFS.size} 个文件`, 'green');
+                
+                // Pre-scan
+                setProgress(10, '预扫描...');
+                preScan();
+                log(`引擎识别: ${engineType}`, 'blue');
+                log(`入口 HTML: ${entryHtml}`, 'blue');
+                log(`工作目录: ${workDir}`, 'blue');
+                
+                // AI Agent Loop
+                await runAIAgentLoop();
+                
+            } catch (error) {
+                log(`错误: ${error.message}`, 'red');
+                console.error(error);
+            }
+        }
+        
+        async function extractZip(file) {
+            const zip = await JSZip.loadAsync(file);
+            virtualFS.clear();
+            
+            const entries = [];
+            zip.forEach((path, zipEntry) => {
+                if (!zipEntry.dir) entries.push({ path, zipEntry });
+            });
+            
+            await Promise.all(entries.map(async ({ path, zipEntry }) => {
+                const content = await zipEntry.async('uint8array');
+                virtualFS.set(path, content);
+            }));
+        }
+        
+        function preScan() {
+            // Find HTML files
+            const htmlFiles = [...virtualFS.keys()].filter(p => p.toLowerCase().endsWith('.html'));
+            
+            // Detect engine
+            const allContent = [...virtualFS.values()].map(c => {
+                try { return new TextDecoder('utf-8', { fatal: false }).decode(c); }
+                catch { return ''; }
+            }).join('\n');
+            
+            if (allContent.includes('phaser') || allContent.includes('Phaser')) engineType = 'phaser';
+            else if (allContent.includes('cocos') || allContent.includes('Cocos')) engineType = 'cocos';
+            else if (allContent.includes('pixi') || allContent.includes('Pixi')) engineType = 'pixi';
+            else if (allContent.includes('createjs') || allContent.includes('CreateJS')) engineType = 'createjs';
+            else engineType = 'html5';
+            
+            // Find entry HTML (index.html or single HTML file)
+            if (htmlFiles.includes('index.html')) {
+                entryHtml = 'index.html';
+            } else if (htmlFiles.length === 1) {
+                entryHtml = htmlFiles[0];
+            } else {
+                // Prefer index.html in subdirectory
+                const indexPath = htmlFiles.find(p => p.endsWith('/index.html'));
+                if (indexPath) entryHtml = indexPath;
+                else entryHtml = htmlFiles[0];
+            }
+            
+            // Determine work directory
+            if (entryHtml.includes('/')) {
+                workDir = entryHtml.substring(0, entryHtml.lastIndexOf('/'));
+            } else {
+                workDir = '';
+            }
+        }
+        
+        // ==================== AI Agent ====================
+        const SYSTEM_PROMPT = `你是一个专业的 HTML5 小游戏 SDK 集成专家。你需要为 MindWorks 平台注入 SDK 钩子。
 
-  <div class="card">
-    <h2>💻 本地使用</h2>
-    <p style="font-size:13px; color:var(--text-dim); margin-bottom: 14px;">
-      此工具为 Node.js 服务端应用，需要在本地运行。步骤如下：
-    </p>
-    <div class="code-block">
-# 1. 克隆仓库
-git clone https://github.com/Tothvillar/aitools.git
-cd aitools/playable-integrator
+## SDK 接入文档
 
-# 2. 安装依赖
-npm install
+平台要求注入的 SDK 钩子：
+- window.install() — CTA下载按钮，素材不得自行跳转商店
+- window.gameReady() — 初始化完成，资源加载完后调用
+- window.gameEnd() — 结束画面时调用
+- window.gameStart = function(){} — 挂在window上，平台主动执行
+- window.gameClose = function(){} — 挂在window上，平台结束时执行
+- window.gameRetry() — 重玩场景调用（可选）
 
-# 3. 配置 API（ARK / Volcengine GLM-5.2）
-# 编辑 .env 文件，填入 API Token
-# TOKEN=ark-xxxxxxxx
-# BASE_URL=https://ark.cn-beijing.volces.com/api/coding
-# MODEL=glm-5.2
+HTML要求：
+- 必须有完整的 html/body/head 标签
+- 必须声明 charset=utf-8
 
-# 4. 启动服务
-npm start
+文件规范：
+- zip ≤ 5MB
+- 文件名只允许字母数字下划线
+- zip名=文件夹名=html名必须一致
 
-# 5. 浏览器打开
-# http://localhost:3000
-    </div>
-    <div class="note">
-      <strong>注意：</strong>需要有效的 <strong>ARK API Token</strong>（字节跳动火山引擎 GLM-5.2）。
-      如果没有，可以修改代码使用其他兼容 OpenAI API 格式的 LLM 服务。
-    </div>
-  </div>
+禁止事项：
+- 不能重写 console
+- 不能自动跳转
+- 不能有在线依赖
 
-  <div class="card">
-    <h2>📁 目录结构</h2>
-    <div class="code-block" style="line-height: 1.9;">
-playable-integrator/
-├── src/
-│   ├── public/
-│   │   └── index.html          # 前端页面
-│   ├── routes/
-│   │   ├── upload.js           # 文件上传接口
-│   │   ├── events.js           # SSE 进度推送
-│   │   └── download.js         # 结果下载接口
-│   ├── agent/
-│   │   └── agent.js            # AI Agent 核心逻辑
-│   └── validator/
-│       └── validate.js         # 16 项校验逻辑
-├── .env                        # API 配置（需自行创建）
-├── package.json
-└── README.md
-    </div>
-  </div>
+## MindWorks Adapter 代码
+在 HTML 的 <head> 标签内插入以下代码：
 
-  <div style="margin-top: 24px; text-align: center;">
-    <a href="https://github.com/Tothvillar/aitools" class="dl-btn" target="_blank">
-      ⬇ 从 GitHub 下载完整项目
-    </a>
-  </div>
+<script>
+(function () {
+    'use strict';
+    var state = { readySent: false, endSent: false, started: false, installing: false };
+    function callFunction(fn, context, args) {
+        if (typeof fn !== 'function') return undefined;
+        try { return fn.apply(context || window, args || []); } catch (error) { console.error('[MindWorksAdapter] error:', error); return undefined; }
+    }
+    function dispatch(name, detail) {
+        try { document.dispatchEvent(new CustomEvent(name, { detail: detail || {} })); } catch (e) {
+            var event = document.createEvent('CustomEvent'); event.initCustomEvent(name, false, true, detail || {}); document.dispatchEvent(event);
+        }
+    }
+    (function() { var original = window.gameReady; window.gameReady = function() { if (state.readySent) return; state.readySent = true; var r = callFunction(original, window, arguments); dispatch('MINDWORKS:gameReady'); return r; }; })();
+    (function() { var original = window.gameEnd; window.gameEnd = function() { if (state.endSent) return; state.endSent = true; var r = callFunction(original, window, arguments); dispatch('MINDWORKS:gameEnd', { result: arguments[0] }); return r; }; })();
+    (function() { var original = window.install; window.install = function() { if (state.installing) return; state.installing = true; try { dispatch('MINDWORKS:install'); return callFunction(original, window, arguments); } finally { setTimeout(function() { state.installing = false; }, 0); } }; })();
+    if (typeof window.gameStart === 'function') { (function() { var original = window.gameStart; window.gameStart = function() { if (state.started) { dispatch('PLAYABLE:gameStart', { repeated: true }); return; } state.started = true; if (!state.readySent && typeof window.gameReady === 'function') window.gameReady(); var r = callFunction(original, window, arguments); dispatch('PLAYABLE:gameStart', { repeated: false }); return r; }; })(); } else { window.gameStart = function() { if (state.started) { dispatch('PLAYABLE:gameStart', { repeated: true }); return; } state.started = true; if (!state.readySent && typeof window.gameReady === 'function') window.gameReady(); dispatch('PLAYABLE:gameStart', { repeated: false }); }; }
+    window.gameClose = function() { callFunction(window.destorySound, window); callFunction(window.destroySound, window); dispatch('MINDWORKS:gameClose'); };
+    if (typeof window.gameRetry === 'function') { (function() { var original = window.gameRetry; window.gameRetry = function() { state.endSent = false; var r = callFunction(original, window, arguments); dispatch('MINDWORKS:gameRetry'); return r; }; })(); }
+    (function() { document.addEventListener('PLAYABLE:redirect', function(event) { var d = event.detail || {}; if (d.type === 'ending') { if (typeof window.gameEnd === 'function') window.gameEnd(d.params && d.params[0]); return; } if (/install|download|store|cta/i.test(String(d.type || ''))) { if (typeof window.install === 'function') window.install(); } }); document.addEventListener('PLAYABLE:gameStart', function() { if (!state.readySent && typeof window.gameReady === 'function') window.gameReady(); }); })();
+    window.MindWorksAdapter = { state: state, dispatch: dispatch };
+}());
+<\/script>
 
-  <div style="text-align:center; padding:40px 0 20px; color:var(--text-dim); font-size:13px;">
-    Powered by <span style="color:var(--accent)">GLM-5.2</span>
-  </div>
+## 你的任务
+1. 使用工具读取和分析文件
+2. 确保所有 SDK 钩子存在（install, gameReady, gameEnd, gameStart, gameClose）
+3. 在合适位置插入 MindWorks Adapter 代码
+4. 确保 HTML 结构完整
+5. 调用 finish 完成任务
 
-</div>
+你有以下工具可用：
+- list_files: 列出工作目录下的文件
+- read_file: 读取文件内容
+- edit_file: 编辑文件（支持全文替换或行级编辑）
+- grep: 搜索文件内容
+- finish: 完成任务`;
+
+        const TOOLS = [
+            {
+                type: 'function',
+                function: {
+                    name: 'list_files',
+                    description: '列出工作目录下的所有文件',
+                    parameters: { type: 'object', properties: {}, required: [] }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'read_file',
+                    description: '读取指定文件的内容',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: '文件路径（相对于工作目录）' }
+                        },
+                        required: ['path']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'edit_file',
+                    description: '编辑文件内容',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: '文件路径' },
+                            content: { type: 'string', description: '新内容（完整文件内容）' }
+                        },
+                        required: ['path', 'content']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'grep',
+                    description: '在文件中搜索内容',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            pattern: { type: 'string', description: '搜索模式' },
+                            path: { type: 'string', description: '文件路径（可选，不填则搜索所有文件）' }
+                        },
+                        required: ['pattern']
+                    }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'finish',
+                    description: '完成任务',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            message: { type: 'string', description: '完成消息' }
+                        },
+                        required: ['message']
+                    }
+                }
+            }
+        ];
+        
+        async function runAIAgentLoop() {
+            const maxRetries = 3;
+            let messages = [
+                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'user', content: `工作目录: ${workDir || '/'}\n入口 HTML: ${entryHtml}\n引擎类型: ${engineType}\n\n请分析并注入 SDK 钩子。` }
+            ];
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                log(`\n========== 第 ${attempt}/${maxRetries} 轮 ==========`, 'purple');
+                setProgress(10 + (attempt - 1) * 25, `第 ${attempt}/${maxRetries} 轮 AI 处理...`);
+                
+                try {
+                    const result = await callArkAPI(messages);
+                    
+                    // Process AI response
+                    messages.push({ role: 'assistant', content: result.content, tool_calls: result.tool_calls });
+                    
+                    // Execute tool calls
+                    if (result.tool_calls && result.tool_calls.length > 0) {
+                        for (const toolCall of result.tool_calls) {
+                            const toolResult = await executeTool(toolCall.function.name, JSON.parse(toolCall.function.arguments));
+                            messages.push({
+                                role: 'tool',
+                                content: JSON.stringify(toolResult),
+                                tool_call_id: toolCall.id
+                            });
+                            
+                            if (toolCall.function.name === 'finish') {
+                                log(`AI 完成: ${toolResult.message}`, 'green');
+                                
+                                // Run post-processing
+                                setProgress(80, '执行后处理...');
+                                postProcess();
+                                
+                                // Run validation
+                                setProgress(90, '执行校验...');
+                                const validation = validate();
+                                
+                                // Show results
+                                showResults(validation);
+                                
+                                // Package and download
+                                if (validation.passed) {
+                                    setProgress(95, '打包下载...');
+                                    await packageAndDownload();
+                                }
+                                
+                                setProgress(100, '完成');
+                                return;
+                            }
+                        }
+                    }
+                    
+                } catch (error) {
+                    log(`API 调用失败: ${error.message}`, 'red');
+                    if (attempt === maxRetries) {
+                        log('已达到最大重试次数', 'red');
+                        showResults({ passed: false, results: [] });
+                    }
+                }
+            }
+        }
+        
+        async function callArkAPI(messages) {
+            const url = `${apiConfig.baseUrl}/messages`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiConfig.token}`
+                },
+                body: JSON.stringify({
+                    model: apiConfig.model,
+                    messages: messages,
+                    tools: TOOLS,
+                    max_tokens: 4096
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API 错误 ${response.status}: ${errorText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Log AI output
+            if (data.content) {
+                const textContent = data.content.filter(c => c.type === 'text').map(c => c.text).join('\n');
+                if (textContent) log(`AI: ${textContent.substring(0, 200)}${textContent.length > 200 ? '...' : ''}`, 'blue');
+            }
+            
+            return {
+                content: data.content,
+                tool_calls: data.tool_calls || data.content?.filter(c => c.type === 'tool_use').map(c => ({
+                    id: c.id,
+                    function: { name: c.name, arguments: JSON.stringify(c.input) }
+                }))
+            };
+        }
+        
+        async function executeTool(name, args) {
+            log(`工具调用: ${name}(${JSON.stringify(args).substring(0, 100)})`, 'orange');
+            
+            switch (name) {
+                case 'list_files': {
+                    const files = [...virtualFS.keys()].filter(p => {
+                        if (workDir) return p.startsWith(workDir + '/') || p === workDir;
+                        return !p.includes('/');
+                    });
+                    return { files };
+                }
+                
+                case 'read_file': {
+                    const path = workDir ? `${workDir}/${args.path}` : args.path;
+                    if (!virtualFS.has(path)) return { error: `文件不存在: ${path}` };
+                    const content = new TextDecoder('utf-8').decode(virtualFS.get(path));
+                    return { content };
+                }
+                
+                case 'edit_file': {
+                    const path = workDir ? `${workDir}/${args.path}` : args.path;
+                    const content = new TextEncoder().encode(args.content);
+                    virtualFS.set(path, content);
+                    return { success: true, path };
+                }
+                
+                case 'grep': {
+                    const results = [];
+                    const pattern = new RegExp(args.pattern, 'gi');
+                    
+                    for (const [path, content] of virtualFS) {
+                        if (args.path && !path.includes(args.path)) continue;
+                        try {
+                            const text = new TextDecoder('utf-8').decode(content);
+                            const lines = text.split('\n');
+                            lines.forEach((line, i) => {
+                                if (pattern.test(line)) {
+                                    results.push({ file: path, line: i + 1, content: line.trim().substring(0, 100) });
+                                }
+                            });
+                        } catch {}
+                    }
+                    return { results: results.slice(0, 50) };
+                }
+                
+                case 'finish':
+                    return { message: args.message };
+                
+                default:
+                    return { error: `未知工具: ${name}` };
+            }
+        }
+        
+        // ==================== Post Processing ====================
+        function postProcess() {
+            log('\n--- 后处理开始 ---', 'purple');
+            
+            const htmlPath = entryHtml;
+            if (!virtualFS.has(htmlPath)) return;
+            
+            let html = new TextDecoder('utf-8').decode(virtualFS.get(htmlPath));
+            
+            // 1. Remove console rewrite
+            const consolePattern = /console\s*=\s*[^;]+;?/g;
+            html = html.replace(consolePattern, '');
+            log('清除 console 重写', 'green');
+            
+            // 2. Remove auto redirects
+            html = html.replace(/window\.location\s*=\s*[^;]+;?/g, '// Redirect removed');
+            html = html.replace(/window\.location\.href\s*=\s*[^;]+;?/g, '// Redirect removed');
+            html = html.replace(/window\.location\.replace\s*\([^)]+\);?/g, '// Redirect removed');
+            log('移除自动跳转', 'green');
+            
+            // 3. Normalize filenames
+            const renameMap = new Map();
+            for (const [path, content] of virtualFS) {
+                const parts = path.split('/');
+                const newName = parts.map((part, i) => {
+                    if (i === parts.length - 1) {
+                        const dotIndex = part.lastIndexOf('.');
+                        if (dotIndex > 0) {
+                            const stem = part.substring(0, dotIndex).replace(/[^a-zA-Z0-9_]/g, '_');
+                            const ext = part.substring(dotIndex);
+                            return stem + ext;
+                        }
+                    }
+                    return part;
+                }).join('/');
+                
+                if (path !== newName) {
+                    renameMap.set(path, newName);
+                }
+            }
+            
+            // Apply renames
+            for (const [oldPath, newPath] of renameMap) {
+                const content = virtualFS.get(oldPath);
+                virtualFS.delete(oldPath);
+                virtualFS.set(newPath, content);
+                
+                // Update references in HTML
+                const oldRef = oldPath.split('/').pop();
+                const newRef = newPath.split('/').pop();
+                html = html.split(oldRef).join(newRef);
+                log(`重命名: ${oldRef} → ${newRef}`, 'green');
+            }
+            
+            // 4. Ensure MindWorks Adapter
+            if (!html.includes('MindWorksAdapter')) {
+                const adapterCode = `<script>
+(function () {
+    'use strict';
+    var state = { readySent: false, endSent: false, started: false, installing: false };
+    function callFunction(fn, context, args) {
+        if (typeof fn !== 'function') return undefined;
+        try { return fn.apply(context || window, args || []); } catch (error) { console.error('[MindWorksAdapter] error:', error); return undefined; }
+    }
+    function dispatch(name, detail) {
+        try { document.dispatchEvent(new CustomEvent(name, { detail: detail || {} })); } catch (e) {
+            var event = document.createEvent('CustomEvent'); event.initCustomEvent(name, false, true, detail || {}); document.dispatchEvent(event);
+        }
+    }
+    (function() { var original = window.gameReady; window.gameReady = function() { if (state.readySent) return; state.readySent = true; var r = callFunction(original, window, arguments); dispatch('MINDWORKS:gameReady'); return r; }; })();
+    (function() { var original = window.gameEnd; window.gameEnd = function() { if (state.endSent) return; state.endSent = true; var r = callFunction(original, window, arguments); dispatch('MINDWORKS:gameEnd', { result: arguments[0] }); return r; }; })();
+    (function() { var original = window.install; window.install = function() { if (state.installing) return; state.installing = true; try { dispatch('MINDWORKS:install'); return callFunction(original, window, arguments); } finally { setTimeout(function() { state.installing = false; }, 0); } }; })();
+    if (typeof window.gameStart === 'function') { (function() { var original = window.gameStart; window.gameStart = function() { if (state.started) { dispatch('PLAYABLE:gameStart', { repeated: true }); return; } state.started = true; if (!state.readySent && typeof window.gameReady === 'function') window.gameReady(); var r = callFunction(original, window, arguments); dispatch('PLAYABLE:gameStart', { repeated: false }); return r; }; })(); } else { window.gameStart = function() { if (state.started) { dispatch('PLAYABLE:gameStart', { repeated: true }); return; } state.started = true; if (!state.readySent && typeof window.gameReady === 'function') window.gameReady(); dispatch('PLAYABLE:gameStart', { repeated: false }); }; }
+    window.gameClose = function() { callFunction(window.destorySound, window); callFunction(window.destroySound, window); dispatch('MINDWORKS:gameClose'); };
+    if (typeof window.gameRetry === 'function') { (function() { var original = window.gameRetry; window.gameRetry = function() { state.endSent = false; var r = callFunction(original, window, arguments); dispatch('MINDWORKS:gameRetry'); return r; }; })(); }
+    (function() { document.addEventListener('PLAYABLE:redirect', function(event) { var d = event.detail || {}; if (d.type === 'ending') { if (typeof window.gameEnd === 'function') window.gameEnd(d.params && d.params[0]); return; } if (/install|download|store|cta/i.test(String(d.type || ''))) { if (typeof window.install === 'function') window.install(); } }); document.addEventListener('PLAYABLE:gameStart', function() { if (!state.readySent && typeof window.gameReady === 'function') window.gameReady(); }); })();
+    window.MindWorksAdapter = { state: state, dispatch: dispatch };
+}());
+<\/script>`;
+                
+                if (html.includes('<head>')) {
+                    html = html.replace('<head>', '<head>\n' + adapterCode);
+                } else if (html.includes('<html>')) {
+                    html = html.replace('<html>', '<html>\n<head>' + adapterCode + '</head>');
+                }
+                log('注入 MindWorks Adapter', 'green');
+            }
+            
+            // 5. Ensure charset
+            if (!html.includes('charset')) {
+                if (html.includes('<head>')) {
+                    html = html.replace('<head>', '<head>\n<meta charset="utf-8">');
+                }
+                log('添加 charset 声明', 'green');
+            }
+            
+            // Save modified HTML
+            virtualFS.set(htmlPath, new TextEncoder().encode(html));
+            log('后处理完成', 'green');
+        }
+        
+        // ==================== Validation ====================
+        function validate() {
+            log('\n--- 校验开始 ---', 'purple');
+            const results = [];
+            
+            if (!virtualFS.has(entryHtml)) {
+                results.push({ id: 1, name: 'HTML结构', status: 'bad', message: '入口 HTML 不存在' });
+                return { passed: false, results };
+            }
+            
+            const html = new TextDecoder('utf-8').decode(virtualFS.get(entryHtml));
+            
+            // 1. HTML Structure
+            const hasHtml = /<html[\s>]/i.test(html);
+            const hasBody = /<body[\s>]/i.test(html);
+            const hasHead = /<head[\s>]/i.test(html);
+            const hasCharset = /charset\s*=\s*['"]?utf-8/i.test(html);
+            results.push({
+                id: 1,
+                name: 'HTML结构',
+                status: (hasHtml && hasBody && hasHead && hasCharset) ? 'ok' : 'bad',
+                message: hasHtml && hasBody && hasHead && hasCharset ? '完整' : `html:${hasHtml} body:${hasBody} head:${hasHead} charset:${hasCharset}`
+            });
+            
+            // 2. window.install
+            results.push({
+                id: 2,
+                name: 'window.install',
+                status: /window\.install\s*[=(]/.test(html) || /function\s+install\s*\(/.test(html) ? 'ok' : 'bad',
+                message: /window\.install\s*[=(]/.test(html) ? '存在' : '未找到'
+            });
+            
+            // 3. window.gameEnd
+            results.push({
+                id: 3,
+                name: 'window.gameEnd',
+                status: /window\.gameEnd\s*[=(]/.test(html) || /function\s+gameEnd\s*\(/.test(html) ? 'ok' : 'bad',
+                message: /window\.gameEnd\s*[=(]/.test(html) ? '存在' : '未找到'
+            });
+            
+            // 4. window.gameReady
+            results.push({
+                id: 4,
+                name: 'window.gameReady',
+                status: /window\.gameReady\s*[=(]/.test(html) || /function\s+gameReady\s*\(/.test(html) ? 'ok' : 'bad',
+                message: /window\.gameReady\s*[=(]/.test(html) ? '存在' : '未找到'
+            });
+            
+            // 5. window.gameStart
+            results.push({
+                id: 5,
+                name: 'window.gameStart',
+                status: /window\.gameStart\s*[=(]/.test(html) || /function\s+gameStart\s*\(/.test(html) ? 'ok' : 'bad',
+                message: /window\.gameStart\s*[=(]/.test(html) ? '存在' : '未找到'
+            });
+            
+            // 6. window.gameRetry (optional)
+            const hasRetry = /window\.gameRetry\s*[=(]/.test(html) || /function\s+gameRetry\s*\(/.test(html);
+            results.push({
+                id: 6,
+                name: 'window.gameRetry',
+                status: hasRetry ? 'ok' : 'warn',
+                message: hasRetry ? '存在' : '可选，未找到'
+            });
+            
+            // 7. window.gameClose
+            results.push({
+                id: 7,
+                name: 'window.gameClose',
+                status: /window\.gameClose\s*[=(]/.test(html) || /function\s+gameClose\s*\(/.test(html) ? 'ok' : 'bad',
+                message: /window\.gameClose\s*[=(]/.test(html) ? '存在' : '未找到'
+            });
+            
+            // 8. Close button by platform (warning)
+            results.push({
+                id: 8,
+                name: '关闭按钮',
+                status: 'warn',
+                message: '由平台处理'
+            });
+            
+            // 9. Loading by platform (warning)
+            results.push({
+                id: 9,
+                name: 'Loading',
+                status: 'warn',
+                message: '由平台处理'
+            });
+            
+            // 10. Orientation
+            const hasViewport = /viewport/.test(html);
+            const hasOrientation = /orientation/i.test(html) || /aspect-ratio/i.test(html);
+            results.push({
+                id: 10,
+                name: '横竖屏适配',
+                status: hasViewport ? 'ok' : 'warn',
+                message: hasViewport ? '存在 viewport' : '建议添加 viewport'
+            });
+            
+            // 11. Ending page with install (warning)
+            const hasEndingInstall = /end|finish|complete/i.test(html) && /install|download|cta/i.test(html);
+            results.push({
+                id: 11,
+                name: '结束页install',
+                status: hasEndingInstall ? 'ok' : 'warn',
+                message: hasEndingInstall ? '包含 install' : '建议在结束页添加 install'
+            });
+            
+            // 12. base64 resources (warning)
+            const hasBase64 = /data:[^;]+;base64/.test(html);
+            results.push({
+                id: 12,
+                name: 'base64资源',
+                status: hasBase64 ? 'warn' : 'ok',
+                message: hasBase64 ? '存在内联资源' : '无'
+            });
+            
+            // 13. File specs
+            let totalSize = 0;
+            let validNames = true;
+            for (const [path, content] of virtualFS) {
+                totalSize += content.length;
+                const parts = path.split('/');
+                const filename = parts[parts.length - 1];
+                const dotIndex = filename.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    const stem = filename.substring(0, dotIndex);
+                    if (!/^[a-zA-Z0-9_]+$/.test(stem)) validNames = false;
+                }
+            }
+            const sizeOk = totalSize <= 5 * 1024 * 1024;
+            results.push({
+                id: 13,
+                name: '文件规范',
+                status: sizeOk && validNames ? 'ok' : 'bad',
+                message: `大小:${(totalSize / 1024 / 1024).toFixed(2)}MB, 命名:${validNames ? '规范' : '含非法字符'}`
+            });
+            
+            // 14. No online dependencies
+            const storeUrls = /play\.google\.com|apps\.apple\.com|itunes\.apple\.com/i.test(html);
+            const staticUrls = /https?:\/\/(?!localhost|127\.0\.0\.1)[^\s"']+\.(js|css|png|jpg|gif|mp3|wav|ogg)/i.test(html);
+            results.push({
+                id: 14,
+                name: '无在线依赖',
+                status: !storeUrls && !staticUrls ? 'ok' : 'bad',
+                message: storeUrls ? '含商店URL' : (staticUrls ? '含外部资源URL' : '无')
+            });
+            
+            // 15. No console rewrite
+            const hasConsoleRewrite = /console\s*=\s*[^;]+;?/.test(html);
+            results.push({
+                id: 15,
+                name: '未重写console',
+                status: !hasConsoleRewrite ? 'ok' : 'bad',
+                message: hasConsoleRewrite ? '检测到重写' : '正常'
+            });
+            
+            // 16. No auto redirect
+            const hasRedirect = /window\.location\s*=/i.test(html) || /window\.location\.href\s*=/i.test(html);
+            results.push({
+                id: 16,
+                name: '无自动跳转',
+                status: !hasRedirect ? 'ok' : 'bad',
+                message: hasRedirect ? '检测到跳转代码' : '正常'
+            });
+            
+            const passed = results.filter(r => r.status === 'bad').length === 0;
+            
+            // Log results
+            for (const r of results) {
+                const icon = r.status === 'ok' ? '✓' : (r.status === 'bad' ? '✗' : '!');
+                log(`${icon} #${r.id} ${r.name}: ${r.message}`, r.status === 'ok' ? 'green' : (r.status === 'bad' ? 'red' : 'orange'));
+            }
+            
+            return { passed, results };
+        }
+        
+        // ==================== Results & Download ====================
+        function showResults(validation) {
+            document.getElementById('resultCard').classList.remove('hidden');
+            
+            const resultsDiv = document.getElementById('validationResults');
+            resultsDiv.innerHTML = validation.results.map(r => 
+                `<span class="pill pill-${r.status}">#${r.id} ${r.name}</span>`
+            ).join('');
+            
+            const resultBox = document.getElementById('resultBox');
+            if (validation.passed) {
+                resultBox.className = 'result-box result-success';
+                resultBox.innerHTML = `
+                    <h3 style="color: #3fb950; margin-bottom: 10px;">✓ 校验通过</h3>
+                    <p style="margin-bottom: 15px;">所有必需项校验通过，可以下载结果。</p>
+                    <button class="btn" onclick="downloadResult()">下载结果 ZIP</button>
+                `;
+            } else {
+                const badItems = validation.results.filter(r => r.status === 'bad');
+                resultBox.className = 'result-box result-fail';
+                resultBox.innerHTML = `
+                    <h3 style="color: #f85149; margin-bottom: 10px;">✗ 校验失败</h3>
+                    <p style="margin-bottom: 10px;">以下项未通过校验：</p>
+                    <ul style="margin-left: 20px; color: #8b949e;">
+                        ${badItems.map(r => `<li>#${r.id} ${r.name}: ${r.message}</li>`).join('')}
+                    </ul>
+                    <button class="btn btn-secondary" style="margin-top: 15px;" onclick="downloadResult()">仍要下载</button>
+                `;
+            }
+        }
+        
+        async function packageAndDownload() {
+            log('打包 ZIP...', 'blue');
+            const zip = new JSZip();
+            
+            for (const [path, content] of virtualFS) {
+                zip.file(path, content);
+            }
+            
+            const blob = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${zipName}_processed.zip`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            log(`下载完成: ${zipName}_processed.zip`, 'green');
+        }
+        
+        async function downloadResult() {
+            await packageAndDownload();
+        }
+        
+        // Initialize on load
+        init();
+    </script>
 </body>
 </html>
