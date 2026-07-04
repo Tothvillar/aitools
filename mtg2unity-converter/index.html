@@ -7,80 +7,41 @@
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #0f1117; color: #e1e4e8; min-height: 100vh; padding: 20px;
-}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f1117; color: #e1e4e8; min-height: 100vh; padding: 20px; }
 .container { max-width: 680px; margin: 0 auto; }
-.back-link {
-  display: inline-block; margin-bottom: 16px; color: #58a6ff; font-size: 14px;
-  text-decoration: none; transition: color 0.15s;
-}
+.back-link { display: inline-block; margin-bottom: 16px; color: #58a6ff; font-size: 14px; text-decoration: none; }
 .back-link:hover { color: #79c0ff; }
 h1 { font-size: 22px; margin-bottom: 4px; color: #58a6ff; }
 .subtitle { color: #8b949e; font-size: 13px; margin-bottom: 24px; }
-.card {
-  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
-  padding: 16px; margin-bottom: 16px;
-}
+.card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
 .card-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #c9d1d9; }
-input[type="text"] {
-  width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
-  color: #e1e4e8; padding: 8px 12px; font-size: 13px; margin-bottom: 8px;
-}
+input[type="text"] { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e1e4e8; padding: 8px 12px; font-size: 13px; margin-bottom: 8px; }
 input[type="text"]:focus { outline: none; border-color: #58a6ff; }
 label { font-size: 12px; color: #8b949e; display: block; margin-bottom: 4px; }
-.drop-zone {
-  border: 2px dashed #30363d; border-radius: 8px; padding: 32px;
-  text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s;
-}
-.drop-zone:hover, .drop-zone.dragover {
-  border-color: #58a6ff; background: #1a2233;
-}
+.drop-zone { border: 2px dashed #30363d; border-radius: 8px; padding: 32px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+.drop-zone:hover, .drop-zone.dragover { border-color: #58a6ff; background: #1a2233; }
 .drop-zone-text { color: #8b949e; font-size: 14px; }
 .drop-zone-text .filename { color: #58a6ff; font-weight: 600; }
-.btn {
-  background: #238636; color: #fff; border: none; border-radius: 6px;
-  padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: background 0.15s;
-}
+.btn { background: #238636; color: #fff; border: none; border-radius: 6px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
 .btn:hover { background: #2ea043; }
 .btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
-.btn-secondary {
-  background: #21262d; color: #c9d1d9; border: 1px solid #30363d;
-}
+.btn-secondary { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
 .btn-secondary:hover { background: #30363d; }
 .btn-row { display: flex; gap: 8px; margin-top: 8px; }
-.progress-bar {
-  width: 100%; height: 6px; background: #21262d; border-radius: 3px;
-  overflow: hidden; margin-top: 12px; display: none;
-}
+.progress-bar { width: 100%; height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; margin-top: 12px; display: none; }
 .progress-bar.active { display: block; }
-.progress-fill {
-  height: 100%; background: #58a6ff; width: 0%; transition: width 0.3s;
-}
-.log {
-  background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
-  padding: 12px; font-family: "Consolas", "Monaco", monospace; font-size: 12px;
-  color: #8b949e; max-height: 300px; overflow-y: auto; white-space: pre-wrap;
-  word-break: break-all;
-}
+.progress-fill { height: 100%; background: #58a6ff; width: 0%; transition: width 0.3s; }
+.log { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px; font-family: "Consolas", "Monaco", monospace; font-size: 12px; color: #8b949e; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
 .log .pass { color: #3fb950; }
 .log .warn { color: #d29922; }
 .log .error { color: #f85149; }
 .log .info { color: #58a6ff; }
 .result-area { margin-top: 16px; display: none; }
 .result-area.active { display: block; }
-.result-summary {
-  font-size: 14px; padding: 12px; border-radius: 6px; margin-bottom: 12px;
-}
+.result-summary { font-size: 14px; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
 .result-summary.success { background: #1a2332; color: #3fb950; border: 1px solid #238636; }
 .result-summary.fail { background: #2d1517; color: #f85149; border: 1px solid #da3633; }
-.download-btn {
-  display: inline-block; background: #238636; color: #fff; text-decoration: none;
-  padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;
-  transition: background 0.15s;
-}
+.download-btn { display: inline-block; background: #238636; color: #fff; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; transition: background 0.15s; }
 .download-btn:hover { background: #2ea043; }
 </style>
 </head>
@@ -88,18 +49,12 @@ label { font-size: 12px; color: #8b949e; display: block; margin-bottom: 4px; }
 <div class="container">
   <a href="../" class="back-link">← Back to Tools</a>
   <h1>MTG to Unity Ads Converter</h1>
-  <p class="subtitle">Upload MTG playable zip, get Unity Ads compatible HTML</p>
-
+  <p class="subtitle">Upload MTG playable zip → get Unity Ads compatible single HTML</p>
   <div class="card">
     <div class="card-title">1. Select MTG ZIP File</div>
-    <div class="drop-zone" id="dropZone">
-      <div class="drop-zone-text" id="dropText">
-        Drop .zip here or click to browse
-      </div>
-    </div>
+    <div class="drop-zone" id="dropZone"><div class="drop-zone-text" id="dropText">Drop .zip here or click to browse</div></div>
     <input type="file" id="fileInput" accept=".zip" style="display:none">
   </div>
-
   <div class="card">
     <div class="card-title">2. Store URLs</div>
     <label>Android URL</label>
@@ -107,56 +62,60 @@ label { font-size: 12px; color: #8b949e; display: block; margin-bottom: 4px; }
     <label>iOS URL</label>
     <input type="text" id="iosUrl" value="https://apps.apple.com/app/idYOUR_IOS_APP_ID">
   </div>
-
   <div class="btn-row">
     <button class="btn" id="convertBtn" disabled>Convert</button>
     <button class="btn btn-secondary" id="clearBtn">Clear</button>
   </div>
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-fill" id="progressFill"></div>
-  </div>
-
+  <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
   <div class="result-area" id="resultArea">
     <div class="result-summary" id="resultSummary"></div>
     <a class="download-btn" id="downloadBtn" href="#">Download HTML</a>
   </div>
-
   <div class="card" style="margin-top:16px">
     <div class="card-title">Log</div>
     <div class="log" id="log"></div>
   </div>
 </div>
-
 <script>
-const UNITY_MRAID_CODE = `(function () {
-  var storeUrl = '__ANDROID_URL__';
+const UNITY_MRAID_TEMPLATE = `<script>
+(function () {
   var androidUrl = '__ANDROID_URL__';
   var iosUrl = '__IOS_URL__';
   var gameStarted = false;
+  var gameReadyCalled = false;
+  window.gameReady = function() {
+    window.OFFLINE_GAMEREADY = true;
+    gameReadyCalled = true;
+    triggerGameStart();
+  };
+  function triggerGameStart() {
+    if (gameStarted) return;
+    if (gameReadyCalled) { startGame(); }
+    else { setTimeout(triggerGameStart, 200); }
+  }
   if (typeof mraid === 'undefined') {
-    document.addEventListener('DOMContentLoaded', function() { startGame(); });
-    if (document.readyState === 'interactive' || document.readyState === 'complete') { startGame(); }
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(triggerGameStart, 500); });
+    if (document.readyState === 'interactive' || document.readyState === 'complete') { setTimeout(triggerGameStart, 500); }
   } else {
     if (mraid.getState() === 'loading') { mraid.addEventListener('ready', onSdkReady); }
     else { onSdkReady(); }
   }
   function onSdkReady() {
     mraid.addEventListener('viewableChange', viewableChangeHandler);
-    if (mraid.isViewable()) { startGame(); }
+    if (mraid.isViewable()) { triggerGameStart(); }
   }
-  function viewableChangeHandler(viewable) { if (viewable) { startGame(); } }
+  function viewableChangeHandler(viewable) { if (viewable) { triggerGameStart(); } }
   function startGame() {
     if (gameStarted) return;
     gameStarted = true;
     window.isGameStarted = true;
-    if (window.MW_gameStartCheck) window.MW_gameStartCheck();
     document.dispatchEvent(new Event('PLAYABLE:gameStart'));
+    if (typeof window.gameStart === 'function') { try { window.gameStart(); } catch(e) { console.error('gameStart error:', e); } }
   }
   window.install = function() {
     var userAgent = navigator.userAgent || navigator.vendor;
-    var url = storeUrl;
-    if (/android/i.test(userAgent) && androidUrl) { url = androidUrl; }
-    else if (/iphone|ipad|ipod/i.test(userAgent) && iosUrl) { url = iosUrl; }
+    var url = iosUrl;
+    if (/android/i.test(userAgent)) { url = androidUrl; }
     if (typeof mraid !== 'undefined' && mraid.open) { mraid.open(url); }
     else { window.open(url, '_blank'); }
   };
@@ -166,74 +125,69 @@ const UNITY_MRAID_CODE = `(function () {
   function getButtonRect(button) { var node = (button && (button.target || button.node)) || null; if (!node || !window.cc || !window.cc.UITransform) return null; var ui = node.getComponent && node.getComponent(window.cc.UITransform); if (!ui || !ui.getBoundingBoxToWorld) return null; try { return ui.getBoundingBoxToWorld(); } catch (err) { return null; } }
   function isLikelyCtaButton(button) { var node = (button && (button.target || button.node)) || null; if (!node) return false; var descriptor = (getNodePath(node) + " " + getNodeLabelText(node)).toLowerCase(); if (/(play|download|install|cta|store|shop|start)/.test(descriptor)) return true; var rect = getButtonRect(button); var w = window.innerWidth || document.documentElement.clientWidth || 0; var h = window.innerHeight || document.documentElement.clientHeight || 0; if (!rect || !w || !h) return false; var cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2; var nw = rect.width / w, nh = rect.height / h; return nw > 0.18 && nh > 0.04 && ((cx / w > 0.7 && cy / h > 0.72) || (cy / h > 0.62 && nw > 0.28)); }
   function hookCocosButtonBridge() { if (!window.cc || !window.cc.Button) return; var proto = window.cc.Button.prototype; if (!proto || proto.__unityCtaHooked || typeof proto._onTouchEnded !== 'function') return; var originalTouchEnded = proto._onTouchEnded; proto._onTouchEnded = function () { var result = originalTouchEnded.apply(this, arguments); var shouldInstall = false; try { shouldInstall = !!(this && this._pressed && isLikelyCtaButton(this)); } catch (err) {} if (shouldInstall) { window.install(); } return result; }; proto.__unityCtaHooked = true; }
-  function hookSdkBridges() { if (window.FbPlayableAd && typeof window.FbPlayableAd.onCTAClick === 'function' && !window.__unityWrappedFbCta) { var origFb = window.FbPlayableAd.onCTAClick; window.FbPlayableAd.onCTAClick = function() { window.install(); return origFb.apply(this, arguments); }; window.__unityWrappedFbCta = true; } if (window.ExitApi && typeof window.ExitApi.exit === 'function' && !window.__unityWrappedExit) { window.ExitApi.exit = function() { window.install(); }; window.__unityWrappedExit = true; } if (window.BGY_MRAID && typeof window.BGY_MRAID.open === 'function' && !window.__unityWrappedBgyOpen) { window.BGY_MRAID.open = function() { window.install(); }; window.__unityWrappedBgyOpen = true; } }
+  function hookSdkBridges() { if (window.FbPlayableAd && typeof window.FbPlayableAd.onCTAClick === 'function' && !window.__unityWrappedFbCta) { var origFb = window.FbPlayableAd.onCTAClick; window.FbPlayableAd.onCTAClick = function() { window.install(); return origFb.apply(this, arguments); }; window.__unityWrappedFbCta = true; } if (window.ExitApi && typeof window.ExitApi.exit === 'function' && !window.__unityWrappedExit) { window.ExitApi.exit = function() { window.install(); }; window.__unityWrappedExit = true; } }
   var hookTimer = setInterval(function () { if (window.cc && window.cc.Button) { clearInterval(hookTimer); hookCocosButtonBridge(); hookSdkBridges(); } }, 100);
   setTimeout(function() { clearInterval(hookTimer); }, 10000);
   if (typeof mraid !== 'undefined' && mraid.open && !mraid.__unityHooked) { mraid.open = function(url) { window.install(); }; mraid.__unityHooked = true; }
-})();`;
+})();
+<\/script>`;
 
 const HEAD_INJECTION = `<script>
-(function() {
-    var s = document.createElement('script');
-    s.src = 'mraid.js';
-    s.async = false;
-    document.head.appendChild(s);
-})();
-(function() {
-    function handleOrientationChange() {
-        if (window.cc && window.cc.view && window.cc.view.resizeWithBrowserSize) { window.cc.view.resizeWithBrowserSize(true); }
-        if (window.cc && window.cc.view && window.cc.view.setCanvasSize) {
-            var w = window.innerWidth || document.documentElement.clientWidth;
-            var h = window.innerHeight || document.documentElement.clientHeight;
-            window.cc.view.setCanvasSize(w, h);
-        }
-        window.dispatchEvent(new Event('orientationchange'));
-        window.dispatchEvent(new Event('resize'));
-    }
-    window.addEventListener('orientationchange', handleOrientationChange);
-    window.addEventListener('resize', handleOrientationChange);
-})();
+(function() { var s = document.createElement('script'); s.src = 'mraid.js'; s.async = false; document.head.appendChild(s); })();
+(function() { function handleOrientationChange() { if (window.cc && window.cc.view && window.cc.view.resizeWithBrowserSize) { window.cc.view.resizeWithBrowserSize(true); } if (window.cc && window.cc.view && window.cc.view.setCanvasSize) { var w = window.innerWidth || document.documentElement.clientWidth; var h = window.innerHeight || document.documentElement.clientHeight; window.cc.view.setCanvasSize(w, h); } window.dispatchEvent(new Event('orientationchange')); window.dispatchEvent(new Event('resize')); } window.addEventListener('orientationchange', handleOrientationChange); window.addEventListener('resize', handleOrientationChange); })();
 <\/script>
 </head>`;
 
-// ============================================================
-// v3: Inline external JS, only remove MTG SDK
-// ============================================================
+function isMtgSdk(src) { return /mtg[-_]?offline[-_]?package\.js/i.test(src); }
 
-function isMtgSdk(src) {
-  return /mtg[-_]?offline[-_]?package\.js/i.test(src);
+function findMtgBridge(content) {
+  const patterns = [
+    /\(function\s*\(\s*\)\s*\{\s*var\s+readySent\s*=\s*false;[\s\S]*?\}\)\s*\(\s*\)\s*;/,
+    /\(function\s*\(\)\s*\{[\s\S]*?readySent[\s\S]*?gameClose[\s\S]*?\}\)\(\);/,
+    /\(function\s*\(\)\s*\{[\s\S]*?function\s+wrapInstall[\s\S]*?function\s+wrapStart[\s\S]*?function\s+wrapEnd[\s\S]*?\}\)\(\);?/,
+    /\(function\s*\(\s*\)\s*\{\s*'use strict';[\s\S]*?installFromUserGesture[\s\S]*?\}\)\s*\(\s*\)\s*;?/,
+  ];
+  for (const p of patterns) { const m = content.match(p); if (m) return m; }
+  return null;
 }
 
-function convertHtml(content, androidUrl, iosUrl, log, zipFiles, htmlDir) {
+function convertHtml(content, androidUrl, iosUrl, zipFiles, htmlDir) {
   const originalSize = new Blob([content]).size;
   const changes = [];
-  let mraidCode = UNITY_MRAID_CODE.replaceAll('__ANDROID_URL__', androidUrl).replaceAll('__IOS_URL__', iosUrl);
+  let mraidCode = UNITY_MRAID_TEMPLATE.replaceAll('__ANDROID_URL__', androidUrl).replaceAll('__IOS_URL__', iosUrl);
 
-  // 1. Process external script tags: inline non-MTG, remove MTG SDK
-  const scriptRe = /<script[^>]*src=["']([^"']+)["'][^>]*>\s*<\/script>/gi;
-  content = content.replace(scriptRe, (fullTag, src) => {
-    if (isMtgSdk(src)) {
-      changes.push(`Removed MTG SDK script: ${src}`);
-      return '';
-    }
-    // Inline local JS files
+  // 1. Process external scripts: inline all local JS, remove MTG SDK
+  content = content.replace(/<script[^>]*src=["']([^"']+)["'][^>]*>\s*<\/script>/gi, (fullTag, src) => {
+    if (isMtgSdk(src)) { changes.push(`Removed MTG SDK: ${src}`); return ''; }
     if (!src.startsWith('http') && !src.startsWith('//')) {
       let jsPath = src.replace(/^\.\//, '');
       let fullPath = htmlDir ? `${htmlDir}/${jsPath}` : jsPath;
       let jsContent = zipFiles[fullPath] || zipFiles[jsPath];
-      if (jsContent) {
-        changes.push(`Inlined JS: ${src} (${jsContent.length} chars)`);
-        return `<script>\n${jsContent}\n<\/script>`;
-      }
+      if (jsContent) { changes.push(`Inlined: ${src} (${jsContent.length} chars)`); return `<script>\n${jsContent}\n<\/script>`; }
     }
-    return fullTag; // Keep CDN/external
+    return fullTag;
   });
 
-  // 2. Replace MTG global vars
+  // 2. Remove inline MTG bridge
+  const bridge = findMtgBridge(content);
+  if (bridge) { content = content.replace(bridge[0], ''); changes.push(`Removed inline MTG bridge (${bridge[0].length} chars)`); }
+
+  // 3. Remove mobvistaGameReady/End functions
+  for (const fn of ['mobvistaGameReady', 'mobvistaGameEnd']) {
+    const re = new RegExp(`function\\s+${fn}\\s*\\(\\s*\\)\\s*\\{[^}]*\\}`);
+    const m = content.match(re);
+    if (m) { content = content.replace(m[0], ''); changes.push(`Removed ${fn} function`); }
+  }
+
+  // 4. Replace mobvista calls
+  content = content.replace(/window\.mobvistaGameReady\s*&&\s*window\.mobvistaGameReady\(\)/g, '(typeof window.gameReady==="function"&&window.gameReady())');
+  content = content.replace(/window\.mobvistaGameEnd\s*&&\s*window\.mobvistaGameEnd\(\)/g, '(typeof window.gameEnd==="function"&&window.gameEnd())');
+
+  // 5. Replace MTG global vars
   content = content.replace(/window\.__mtgSdkGameReady\s*\|\|\s*window\.gameReady/g, 'undefined');
   content = content.replace(/window\.__mtgSdkInstall\s*\|\|\s*window\.install/g, 'window.install');
 
-  // 3. Update store URLs
+  // 6. Update store URLs
   content = content.replace(/pb_google_url:"([^"]*)"/g, `pb_google_url:"${androidUrl}"`);
   content = content.replace(/pb_ios_url:"([^"]*)"/g, `pb_ios_url:"${iosUrl}"`);
   const androidPkg = androidUrl.includes('id=') ? androidUrl.split('id=')[1] : androidUrl;
@@ -244,42 +198,29 @@ function convertHtml(content, androidUrl, iosUrl, log, zipFiles, htmlDir) {
   content = content.replace(/var iosLink=""/, `var iosLink="${iosUrl}"`);
   content = content.replace(/var androidLink=""/, `var androidLink="${androidUrl}"`);
 
-  // 4. Inject Unity MRAID before </body>
-  if (content.includes('</body>')) {
-    content = content.replace('</body>', mraidCode + '\n</body>');
-    changes.push('Injected Unity MRAID code before </body>');
-  } else {
-    content = mraidCode + '\n' + content;
-    changes.push('Injected Unity MRAID code (no </body>)');
+  // 7. Inject Unity MRAID before </body>
+  if (content.includes('</body>')) { content = content.replace('</body>', mraidCode + '\n</body>'); changes.push('Injected Unity MRAID code before </body>'); }
+  else { content = mraidCode + '\n' + content; changes.push('Injected Unity MRAID code'); }
+
+  // 8. Inject mraid.js + orientation in </head>
+  if (!content.slice(0, 5000).includes('mraid.js')) {
+    if (content.includes('</head>')) { content = content.replace('</head>', HEAD_INJECTION, 1); changes.push('Injected mraid.js + orientation handlers'); }
   }
 
-  // 5. Inject mraid.js + orientation
-  if (!content.includes('mraid.js')) {
-    if (content.includes('</head>')) {
-      content = content.replace('</head>', HEAD_INJECTION);
-      changes.push('Injected mraid.js + orientation handlers');
-    } else {
-      content = HEAD_INJECTION.replace('</head>', '') + content;
-      changes.push('Injected mraid.js + orientation handlers (no </head>)');
-    }
-  }
-
-  // 6. Verify
   const newSize = new Blob([content]).size;
   const mtgRemnants = (content.match(/mtg-offline-package|__mtgSdk/g) || []).length;
-  const hasOrientation = content.includes('orientationchange');
   const hasMraid = content.includes('mraid.js');
+  const hasOrientation = content.includes('orientationchange');
   const hasInstall = content.includes('window.install');
+  const hasGameReady = content.includes('OFFLINE_GAMEREADY');
+  const hasTrigger = content.includes('triggerGameStart');
   const localRefs = (content.match(/src=["']\.\.?\/[^"']*\.js["']/g) || []).length;
-  const success = mtgRemnants === 0 && hasMraid && hasOrientation && hasInstall && localRefs === 0;
+  const success = mtgRemnants === 0 && hasMraid && hasOrientation && hasInstall && hasGameReady && hasTrigger && localRefs === 0 && newSize < 5*1048576;
 
-  return { content, originalSizeMB: (originalSize/1048576).toFixed(2), newSizeMB: (newSize/1048576).toFixed(2), changes, mtgRemnants, hasMraid, hasOrientation, hasInstall, localRefs, success };
+  return { content, originalSizeMB: (originalSize/1048576).toFixed(2), newSizeMB: (newSize/1048576).toFixed(2), changes, mtgRemnants, hasMraid, hasOrientation, hasInstall, hasGameReady, hasTrigger, localRefs, success };
 }
 
-// ============================================================
 // UI
-// ============================================================
-
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
 const dropText = document.getElementById('dropText');
@@ -291,35 +232,16 @@ const progressFill = document.getElementById('progressFill');
 const resultArea = document.getElementById('resultArea');
 const resultSummary = document.getElementById('resultSummary');
 const downloadBtn = document.getElementById('downloadBtn');
+let selectedFile = null, convertedBlobUrl = null;
 
-let selectedFile = null;
-let convertedBlobUrl = null;
-
-function log(msg, cls = '') {
-  const line = document.createElement('div');
-  if (cls) line.className = cls;
-  line.textContent = msg;
-  logEl.appendChild(line);
-  logEl.scrollTop = logEl.scrollHeight;
-}
-
-function formatBytes(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-  return (b / 1048576).toFixed(2) + ' MB';
-}
+function log(msg, cls = '') { const line = document.createElement('div'); if (cls) line.className = cls; line.textContent = msg; logEl.appendChild(line); logEl.scrollTop = logEl.scrollHeight; }
+function formatBytes(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(2) + ' MB'; }
 
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('dragover');
-  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', e => {
-  if (e.target.files.length) handleFile(e.target.files[0]);
-});
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
 function handleFile(file) {
   if (!file.name.toLowerCase().endsWith('.zip')) { log('ERROR: Please select a .zip file', 'error'); return; }
@@ -337,71 +259,56 @@ convertBtn.addEventListener('click', async () => {
   progressFill.style.width = '10%';
   resultArea.classList.remove('active');
   logEl.innerHTML = '';
-
   const androidUrl = document.getElementById('androidUrl').value.trim();
   const iosUrl = document.getElementById('iosUrl').value.trim();
   if (!androidUrl) { log('ERROR: Android URL is required', 'error'); convertBtn.disabled = false; progressBar.classList.remove('active'); return; }
-
   log('='.repeat(60));
   log(`Converting: ${selectedFile.name}`, 'info');
-  log(`Android: ${androidUrl}`);
-  log(`iOS: ${iosUrl}`);
   log('='.repeat(60));
-
   try {
     progressFill.style.width = '30%';
     log('Reading zip...');
     const zip = await JSZip.loadAsync(selectedFile);
-
     let htmlEntry = null;
-    for (const name in zip.files) {
-      if (name.endsWith('.html') || name.endsWith('.htm')) { htmlEntry = zip.files[name]; break; }
-    }
+    for (const name in zip.files) { if (name.endsWith('.html') || name.endsWith('.htm')) { htmlEntry = zip.files[name]; break; } }
     if (!htmlEntry) { log('ERROR: No HTML file found in zip', 'error'); convertBtn.disabled = false; progressBar.classList.remove('active'); return; }
-
     progressFill.style.width = '40%';
     const htmlName = htmlEntry.name;
     const htmlDir = htmlName.includes('/') ? htmlName.substring(0, htmlName.lastIndexOf('/')) : '';
     log(`Found HTML: ${htmlName}`);
-
     const htmlContent = await htmlEntry.async('string');
     progressFill.style.width = '50%';
-
-    // Read ALL files from zip for inlining
     const zipFiles = {};
-    for (const name in zip.files) {
-      if (!zip.files[name].dir && name.endsWith('.js')) {
-        zipFiles[name] = await zip.files[name].async('string');
-      }
-    }
+    for (const name in zip.files) { if (!zip.files[name].dir && name.endsWith('.js')) { zipFiles[name] = await zip.files[name].async('string'); } }
     const jsCount = Object.keys(zipFiles).length;
     if (jsCount > 0) log(`Read ${jsCount} JS file(s) from zip`);
-
     progressFill.style.width = '70%';
     log('Converting...');
-    const result = convertHtml(htmlContent, androidUrl, iosUrl, msg => log(msg, 'warn'), zipFiles, htmlDir);
-
+    const result = convertHtml(htmlContent, androidUrl, iosUrl, zipFiles, htmlDir);
     progressFill.style.width = '90%';
     const status = result.success ? 'PASS' : 'WARN';
-    log(`${status} | ${result.originalSizeMB}MB -> ${result.newSizeMB}MB | MTG:${result.mtgRemnants} mraid:${result.hasMraid ? 'Y' : 'N'} orient:${result.hasOrientation ? 'Y' : 'N'} install:${result.hasInstall ? 'Y' : 'N'} refs:${result.localRefs}`, result.success ? 'pass' : 'warn');
+    log(`${status} | ${result.originalSizeMB}MB -> ${result.newSizeMB}MB`, result.success ? 'pass' : 'warn');
+    log(`  MTG remnants: ${result.mtgRemnants}`);
+    log(`  mraid.js: ${result.hasMraid ? 'Y' : 'N'}`);
+    log(`  orientation: ${result.hasOrientation ? 'Y' : 'N'}`);
+    log(`  install: ${result.hasInstall ? 'Y' : 'N'}`);
+    log(`  gameReady+OFFLINE_GAMEREADY: ${result.hasGameReady ? 'Y' : 'N'}`);
+    log(`  triggerGameStart: ${result.hasTrigger ? 'Y' : 'N'}`);
+    log(`  local refs: ${result.localRefs}`);
+    log(`  < 5MB: ${result.newSizeMB < 5 ? 'Y' : 'N'}`);
     for (const c of result.changes) log(`  -> ${c}`);
-
     let outName = htmlName.split('/').pop().replace(/_MTG/i, '_Unity').replace(/_mtg/i, '_Unity');
     if (!outName.includes('_Unity')) { const dot = outName.lastIndexOf('.'); outName = outName.slice(0, dot) + '_Unity' + outName.slice(dot); }
-
     if (convertedBlobUrl) URL.revokeObjectURL(convertedBlobUrl);
     const blob = new Blob([result.content], { type: 'text/html' });
     convertedBlobUrl = URL.createObjectURL(blob);
     downloadBtn.href = convertedBlobUrl;
     downloadBtn.download = outName;
-
     progressFill.style.width = '100%';
     resultArea.classList.add('active');
     if (result.success) { resultSummary.className = 'result-summary success'; resultSummary.textContent = `Conversion successful! ${result.originalSizeMB}MB -> ${result.newSizeMB}MB`; }
     else { resultSummary.className = 'result-summary fail'; resultSummary.textContent = `Conversion completed with warnings. Check log for details.`; }
-
     log(`\nDone! Output: ${outName} (${result.newSizeMB} MB)`, 'pass');
-    log(`Click "Download HTML" to save.`, 'info');
   } catch (err) {
     log(`FATAL ERROR: ${err.message}`, 'error');
     console.error(err);
@@ -412,12 +319,9 @@ convertBtn.addEventListener('click', async () => {
 });
 
 clearBtn.addEventListener('click', () => {
-  selectedFile = null;
-  convertBtn.disabled = true;
-  fileInput.value = '';
+  selectedFile = null; convertBtn.disabled = true; fileInput.value = '';
   dropText.textContent = 'Drop .zip here or click to browse';
-  logEl.innerHTML = '';
-  resultArea.classList.remove('active');
+  logEl.innerHTML = ''; resultArea.classList.remove('active');
   if (convertedBlobUrl) { URL.revokeObjectURL(convertedBlobUrl); convertedBlobUrl = null; }
 });
 </script>
