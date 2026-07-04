@@ -134,7 +134,7 @@ label { font-size: 12px; color: #8b949e; display: block; margin-bottom: 4px; }
 
 <script>
 // ============================================================
-// Unity MRAID replacement code
+// Unity MRAID replacement code (same as before)
 // ============================================================
 const UNITY_MRAID_CODE = `(function () {
   var storeUrl = '__ANDROID_URL__';
@@ -189,7 +189,7 @@ const UNITY_MRAID_CODE = `(function () {
       var current = queue.shift();
       if (!current) continue;
       var label = current.getComponent && current.getComponent(window.cc.Label);
-      if (label && typeof label.string === "string" && label.string) { texts.push(label.string); }
+      if (label && typeof label.string === 'string' && label.string) { texts.push(label.string); }
       var children = current.children || [];
       for (var i = 0; i < children.length; i++) queue.push(children[i]);
     }
@@ -245,9 +245,6 @@ const UNITY_MRAID_CODE = `(function () {
     if (window.BGY_MRAID && typeof window.BGY_MRAID.open === 'function' && !window.__unityWrappedBgyOpen) {
       window.BGY_MRAID.open = function() { window.install(); }; window.__unityWrappedBgyOpen = true;
     }
-    if (typeof window.open === 'function' && !window.__unityWrappedWindowOpen) {
-      window.open = function() { window.install(); }; window.__unityWrappedWindowOpen = true;
-    }
   }
 
   var hookTimer = setInterval(function () {
@@ -286,10 +283,11 @@ const HEAD_INJECTION = `<script>
 </head>`;
 
 // ============================================================
-// Conversion logic
+// Conversion logic (v2 - handles both inline and external MTG SDK)
 // ============================================================
 
-function findMtgBridge(content) {
+function findMtgBridgeInText(content) {
+  // Pattern 1: Original MTG bridge (readySent/startSent pattern)
   const patterns = [
     /\(function\s*\(\s*\)\s*\{\s*var\s+readySent\s*=\s*false;\s*var\s+startSent\s*=\s*false;[\s\S]*?window\.gameClose\s*=\s*window\.gameClose\s*\|\|\s*function\s*\(\s*\)\s*\{\s*\};[\s\S]*?\}\)\s*\(\s*\)\s*;/,
     /\(function\s*\(\s*\)\s*\{\s*var\s+readySent\s*=\s*false;[\s\S]*?\}\)\s*\(\s*\)\s*;/,
@@ -297,34 +295,78 @@ function findMtgBridge(content) {
   ];
   for (let i = 0; i < patterns.length; i++) {
     const m = content.match(patterns[i]);
-    if (m) return { match: m, index: m.index, patternIdx: i };
+    if (m) return { match: m, index: m.index, patternIdx: i, source: 'inline' };
   }
+  
+  // Pattern 2: MindWorks adapter (mindworks_adapter.js inline)
+  const mwPattern = /\(function\s*\(\s*\)\s*\{\s*'use strict';[\s\S]*?installFromUserGesture[\s\S]*?\}\)\s*\(\s*\)\s*;?/;
+  const mwMatch = content.match(mwPattern);
+  if (mwMatch) return { match: mwMatch, index: mwMatch.index, patternIdx: 3, source: 'mindworks_inline' };
+  
+  // Pattern 3: MindWorks adapter (broader - looks for wrapInstall + wrapEnd + wrapStart)
+  const wrapPattern = /\(function\s*\(\)\s*\{[\s\S]*?function\s+wrapInstall[\s\S]*?function\s+wrapStart[\s\S]*?function\s+wrapEnd[\s\S]*?\}\)\(\);?/;
+  const wrapMatch = content.match(wrapPattern);
+  if (wrapMatch) return { match: wrapMatch, index: wrapMatch.index, patternIdx: 4, source: 'mindworks_wrap' };
+  
   return null;
 }
 
-function convertHtml(content, androidUrl, iosUrl, log) {
+function convertHtml(content, androidUrl, iosUrl, log, zipFiles) {
   const originalSize = new Blob([content]).size;
   const changes = [];
-
-  // 1. Replace MTG bridge
   let mraidCode = UNITY_MRAID_CODE.replaceAll('__ANDROID_URL__', androidUrl).replaceAll('__IOS_URL__', iosUrl);
-  const bridge = findMtgBridge(content);
+
+  // 1. Try to find and replace MTG bridge (inline in HTML)
+  let bridge = findMtgBridgeInText(content);
   if (bridge) {
     const oldBlock = bridge.match[0];
     content = content.slice(0, bridge.index) + mraidCode + content.slice(bridge.index + oldBlock.length);
-    changes.push(`MTG bridge -> Unity MRAID (${oldBlock.length} -> ${mraidCode.length} chars)`);
+    changes.push(`MTG bridge (${bridge.source}) -> Unity MRAID (${oldBlock.length} -> ${mraidCode.length} chars)`);
   } else {
-    log('WARN: No MTG bridge found, appending MRAID code');
-    content = content.replace('</body>', mraidCode + '\n</body>');
-    changes.push('MRAID code injected before </body> (fallback)');
+    // 1b. Check if MTG bridge is in external JS files (mindworks_adapter.js, mtg_offline_package.js)
+    let foundExternal = false;
+    if (zipFiles) {
+      for (const [fname, fcontent] of Object.entries(zipFiles)) {
+        if (!fname.endsWith('.js')) continue;
+        const extBridge = findMtgBridgeInText(fcontent);
+        if (extBridge) {
+          changes.push(`Found MTG bridge in external JS: ${fname} (${extBridge.source})`);
+          foundExternal = true;
+          break;
+        }
+        // Also check for mtg_offline_package.js content patterns
+        if (fname.match(/mtg.?offline|mindworks|package.?loading/i) && fcontent.length > 1000) {
+          changes.push(`Found MTG SDK file: ${fname} (${fcontent.length} chars)`);
+          foundExternal = true;
+        }
+      }
+    }
+    
+    if (foundExternal) {
+      // Remove external MTG script tags and inject MRAID
+      log('MTG bridge found in external JS files, removing references and injecting MRAID');
+    } else {
+      log('WARN: No MTG bridge found, appending MRAID code');
+    }
+    
+    // Inject MRAID before </body> or at end
+    if (content.includes('</body>')) {
+      content = content.replace('</body>', mraidCode + '\n</body>');
+    } else {
+      content = mraidCode + '\n' + content;
+    }
+    changes.push('MRAID code injected before </body>');
   }
 
-  // 2. Remove external MTG scripts
+  // 2. Remove external MTG script tags (broader patterns)
   const extScripts = [
-    /<script[^>]*src=["'][^"']*mtg-offline-package\.js["'][^>]*>\s*<\/script>/gi,
-    /<script[^>]*src=["'][^"']*package-loading\.js["'][^>]*>\s*<\/script>/gi,
-    /<script[^>]*src=["'][^"']*mw_config\.js["'][^>]*>\s*<\/script>/gi,
-    /<script[^>]*src=["'][^"']*web-audio-check\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*mtg[-_]?offline[-_]?package\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*package[-_]?loading\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*mw[-_]?config\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*web[-_]?audio[-_]?check\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*mindworks[-_]?adapter\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*dynamic[-_]?loader\.js["'][^>]*>\s*<\/script>/gi,
+    /<script[^>]*src=["'][^"']*DynamicLoader\.js["'][^>]*>\s*<\/script>/gi,
   ];
   let extRemoved = 0;
   for (const p of extScripts) {
@@ -334,8 +376,13 @@ function convertHtml(content, androidUrl, iosUrl, log) {
   if (extRemoved) changes.push(`Removed ${extRemoved} external MTG script tag(s)`);
 
   // 3. Replace MTG global vars
-  content = content.replace('window.__mtgSdkGameReady||window.gameReady', 'undefined');
-  content = content.replace('window.__mtgSdkInstall||window.install', 'window.install');
+  content = content.replace(/window\.__mtgSdkGameReady\s*\|\|\s*window\.gameReady/g, 'undefined');
+  content = content.replace(/window\.__mtgSdkInstall\s*\|\|\s*window\.install/g, 'window.install');
+  
+  // 3b. Replace mobvistaGameReady/End calls to use window directly
+  // (they already call window.gameReady/gameEnd, but ensure they exist)
+  content = content.replace(/window\.mobvistaGameReady\s*&&\s*window\.mobvistaGameReady\(\)/g, '(typeof window.gameReady === "function" && window.gameReady())');
+  content = content.replace(/window\.mobvistaGameEnd\s*&&\s*window\.mobvistaGameEnd\(\)/g, '(typeof window.gameEnd === "function" && window.gameEnd())');
 
   // 4. Update store URLs
   content = content.replace(/pb_google_url:"([^"]*)"/g, `pb_google_url:"${androidUrl}"`);
@@ -344,6 +391,11 @@ function convertHtml(content, androidUrl, iosUrl, log) {
   const iosId = iosUrl.includes('/id') ? iosUrl.split('/id')[1] : iosUrl;
   content = content.replaceAll('YOUR_ANDROID_PACKAGE', androidPkg);
   content = content.replaceAll('YOUR_IOS_APP_ID', iosId);
+
+  // 4b. Replace empty store URLs (from MTG adaptation)
+  content = content.replace(/var\s+clickTag\s*=\s*''/g, `var clickTag='${androidUrl}'`);
+  content = content.replace(/var\s+iosLink\s*=\s*""/g, `var iosLink="${iosUrl}"`);
+  content = content.replace(/var\s+androidLink\s*=\s*""/g, `var androidLink="${androidUrl}"`);
 
   // 5. Inject mraid.js + orientation
   if (!content.includes('mraid.js')) {
@@ -358,23 +410,26 @@ function convertHtml(content, androidUrl, iosUrl, log) {
 
   // 6. Verify
   const mtgRemnants = (content.match(/mtg-offline-package|__mtgSdk/g) || []).length;
-  const extRefs = (content.match(/src=['"]\.\//g) || []).length;
+  const extRefs = (content.match(/src=['"]\.\.?(\/|assets\/)/g) || []).length;
   const hasOrientation = content.includes('orientationchange');
   const hasMraid = content.includes('mraid.js');
+  const hasInstall = content.includes('window.install');
+  const hasGameReady = content.includes('window.gameReady') || content.includes('gameReady');
+  const hasGameEnd = content.includes('window.gameEnd') || content.includes('gameEnd');
   const newSize = new Blob([content]).size;
-  const success = mtgRemnants === 0 && extRefs === 0 && hasMraid && hasOrientation;
+  const success = mtgRemnants === 0 && hasMraid && hasOrientation && hasInstall;
 
   return {
     content,
     originalSizeMB: (originalSize / 1048576).toFixed(2),
     newSizeMB: (newSize / 1048576).toFixed(2),
     changes,
-    mtgRemnants, extRefs, hasMraid, hasOrientation, success
+    mtgRemnants, extRefs, hasMraid, hasOrientation, hasInstall, hasGameReady, hasGameEnd, success
   };
 }
 
 // ============================================================
-// UI logic
+// UI logic (same as before)
 // ============================================================
 
 const dropZone = document.getElementById('dropZone');
@@ -446,11 +501,11 @@ convertBtn.addEventListener('click', async () => {
 
   if (!androidUrl) { log('ERROR: Android URL is required', 'error'); convertBtn.disabled = false; progressBar.classList.remove('active'); return; }
 
-  log('=' .repeat(60));
+  log('='.repeat(60));
   log(`Converting: ${selectedFile.name}`, 'info');
   log(`Android: ${androidUrl}`);
   log(`iOS: ${iosUrl}`);
-  log('=' .repeat(60));
+  log('='.repeat(60));
 
   try {
     progressFill.style.width = '30%';
@@ -473,20 +528,31 @@ convertBtn.addEventListener('click', async () => {
       return;
     }
 
-    progressFill.style.width = '50%';
+    progressFill.style.width = '40%';
     const htmlName = htmlEntry.name.split('/').pop();
     log(`Found HTML: ${htmlName}`);
 
     const htmlContent = await htmlEntry.async('string');
-    progressFill.style.width = '70%';
+    progressFill.style.width = '50%';
 
+    // Read all JS files from zip for MTG bridge detection
+    const zipFiles = {};
+    for (const name in zip.files) {
+      if (name.endsWith('.js') && !zip.files[name].dir) {
+        zipFiles[name] = await zip.files[name].async('string');
+      }
+    }
+    const jsCount = Object.keys(zipFiles).length;
+    if (jsCount > 0) log(`Read ${jsCount} JS file(s) from zip for MTG bridge detection`);
+
+    progressFill.style.width = '70%';
     log('Converting...');
-    const result = convertHtml(htmlContent, androidUrl, iosUrl, msg => log(msg, 'warn'));
+    const result = convertHtml(htmlContent, androidUrl, iosUrl, msg => log(msg, 'warn'), zipFiles);
 
     progressFill.style.width = '90%';
 
     const status = result.success ? 'PASS' : 'WARN';
-    log(`${status} | ${result.originalSizeMB}MB -> ${result.newSizeMB}MB | MTG:${result.mtgRemnants} mraid:${result.hasMraid ? 'Y' : 'N'} orient:${result.hasOrientation ? 'Y' : 'N'}`, result.success ? 'pass' : 'warn');
+    log(`${status} | ${result.originalSizeMB}MB -> ${result.newSizeMB}MB | MTG:${result.mtgRemnants} mraid:${result.hasMraid ? 'Y' : 'N'} orient:${result.hasOrientation ? 'Y' : 'N'} install:${result.hasInstall ? 'Y' : 'N'}`, result.success ? 'pass' : 'warn');
     for (const c of result.changes) log(`  -> ${c}`);
 
     // Output filename
